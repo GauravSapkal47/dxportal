@@ -1,0 +1,25 @@
+.TeamStatus-single {
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  .TeamStatus-single:first-child {
+    padding-top: 20px;
+  }
+  .TeamStatus-single:last-child {
+    border-bottom: 0;
+  }
+  .messagescroll {
+    max-height: 43px;
+    overflow-y: auto;
+    display: block;
+}
+.expandIcon{ height: auto; text-align: right;max-width: 13px; cursor: pointer;}
+.showMore {display: block !important;}
+.showNothing{display: none !important;}
+.commonDgWrapper {display: flex; flex-wrap: wrap; position: relative; min-width: 440px;}
+.dgTextLeft {flex: 1}
+.dgTextRight {flex: 0 0 13px; margin-left: 5px;}
+.commonDgWrapper .expandIcon {    position: absolute;
+  top: 7px;
+  right: 0;}
