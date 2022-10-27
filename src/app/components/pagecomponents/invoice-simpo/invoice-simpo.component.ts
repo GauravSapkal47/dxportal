@@ -1036,15 +1036,14 @@ export class InvoiceSimpoComponent implements OnInit {
 
           const dialogRef = this.dialog.open(PopupComponent, {
             panelClass: 'custom-modalbox',
-
             width: '400px',
             data: { datakey: dialogConfig.data }
 
           });
-          dialogRef.afterClosed().subscribe(result => {
-            console.log(`Dialog result1: ${result}`);
-            this.router.navigate(['/trackInvoiceList']);
-          });
+          // dialogRef.afterClosed().subscribe(result => {
+          //   console.log(`Dialog result1: ${result}`);
+          //   this.router.navigate(['/trackInvoiceList']);
+          // });
           return false;
         }
 
@@ -1057,6 +1056,8 @@ export class InvoiceSimpoComponent implements OnInit {
         this.quantitylist = [];
         this.lineitemnumberlist = [];
         this.poSimpoUniquelineitem = [];
+        this.nullQuantityList=[];
+
         console.log("this.posimponewList", this.posimponewList)
         console.log("this.uniquelineitem og", this.uniquelineitems);
         // this.uniquelineitems.push(this.posimponewList);
@@ -1435,6 +1436,10 @@ export class InvoiceSimpoComponent implements OnInit {
         }
 
         console.log("==>this.poSimpoUniquelineitem : ", this.poSimpoUniquelineitem);
+
+        this.simpoinvoicesubmissionarray = [];
+        this.finalInvoiceList = [];
+
 
         for (var l = 0; l < this.poSimpoUniquelineitem.length; l++) {
           this.customDelivery = new customDelivery();
@@ -2607,6 +2612,7 @@ export class InvoiceSimpoComponent implements OnInit {
     }
     this.overallAmount = 0;
     //console.log("total===========>", this.calculatedAmount);
+   
     this.invoiceForm.controls['calRealtime' + i].setValue(Math.round(Number(this.calculatedAmount) * 100) / 100);
     for (let a = 0; a < this.uniquelineitems.length; a++) {
       if (this.invoiceForm.controls['orderValue' + a].value == 0 || this.invoiceForm.controls['orderValue' + a].value == "") {
@@ -2634,15 +2640,15 @@ export class InvoiceSimpoComponent implements OnInit {
     console.log("this.finalTotalAmount--", this.finalTotalAmount);
 
     console.log("this.overallAmount: ",this.overallAmount);
+    
+    this.overallsimpoAmountCheck = false;
     if(this.overallAmount==0 ||this.overallAmount== 0.0){
       this.overallsimpoAmountCheck = true;
-    }else{ 
-      for(var a=0;a<this.simpoSelectedPo.length;a++){
-        if (this.invoiceForm.controls['overallsimpoAmount' + a].value == 0) {
-          this.overallsimpoAmountCheck = true;
-        }else{
-          this.overallsimpoAmountCheck = false;
-        }
+    }
+    
+    for(var a=0;a<this.simpoSelectedPo.length;a++){
+      if (this.invoiceForm.controls['overallsimpoAmount' + a].value == 0) {
+        this.overallsimpoAmountCheck = true;
       }
     }
     console.log("this.overallsimpoAmountCheck : ",this.overallsimpoAmountCheck);
@@ -2739,9 +2745,11 @@ export class InvoiceSimpoComponent implements OnInit {
     console.log(this.simpoSelectedPo)
     // setTimeout(() => {
     if (source == 'normal') {
+      this.overallsimpoAmountCheck = false;
       for (let a = 0; a < this.simpoSelectedPo.length; a++) {
         this.overallAmountsimpo = 0;
         this.inputBalanceQuantitysimpo = 0;
+       
         for (let b = 0; b < this.posimponewList.length; b++) {
 
           if (this.posimponewList[b].PO_NUMBER == this.simpoSelectedPo[a]) {
@@ -2785,9 +2793,9 @@ export class InvoiceSimpoComponent implements OnInit {
         if (this.invoiceForm.controls['overallsimpoAmount' + a].value == 0) {
           this.overallsimpoAmountCheck = true;
         }
-        else {
-          this.overallsimpoAmountCheck = false;
-        }
+        // else {
+        //   this.overallsimpoAmountCheck = false;
+        // }
       }
     }
 
