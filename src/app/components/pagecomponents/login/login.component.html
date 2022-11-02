@@ -88,10 +88,10 @@
                                 <!-- <div class="resend-linkWrapper text-right">
                                     <a href="javascript:;" (click)="sendOTP(loginForm.controls['PAN'].value, loginForm.controls['Email'].value)" class="resendLink">Resend OTP</a>
                                 </div> -->
-                                <!-- <div class="g-recaptcha" data-sitekey=""></div> -->
+                                <div class="g-recaptcha" data-sitekey=""></div>
                                 <div class="captcha">
-                                    <ngx-recaptcha2 #captchaElem [siteKey]="siteKey" formControlName="recaptcha">
-                                    </ngx-recaptcha2>
+                                    <!-- <ngx-recaptcha2 #captchaElem [siteKey]="siteKey" formControlName="recaptcha">
+                                    </ngx-recaptcha2> -->
                                 </div>
                                 <div style="margin-top: 12px">
                                     <!-- FOR NO RE-CAPTCHA -->
@@ -108,9 +108,7 @@
                                 </div>
                             </div>
                         </div>
-
                     </form>
-
                     <!-- <form>
                 <div *ngif="step == 1">
                     <h3>Step 1</h3>
@@ -118,7 +116,6 @@
                         <input type="text" class="" placeholder="Name">
                     </div>
                 </div>
-    
                 <div *ngif="step == 2">
                     <h3>Step 1</h3>
                     <div class="form-group">
