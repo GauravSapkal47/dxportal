@@ -57,5 +57,7 @@ export class Delivery{
 	 beforesubmissioninvoicenumber: any;
 	 srcnnumber: any;
 	 dcnumber:any;
-
+	 type: string;
+     previnvno: string;
+     prevponos: string;
 }
