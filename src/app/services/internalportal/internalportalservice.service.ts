@@ -180,7 +180,8 @@ export class InternalportalserviceService {
     // urlSearchParams =  urlSearchParams.append('actionby', sessionStorage.getItem('storekeeper'));
     let jsonData = urlSearchParams.toString();
     console.log("AppSettings.apitime ==>", AppSettings.apitime)
-    if (AppSettings.apitime == "http://115.242.9.72:8085/DxProject" || AppSettings.apitime == "http://localhost:8080/DxProject") {
+    if (AppSettings.apitime == "http://115.242.9.72:8085/DxProject" || AppSettings.apitime == "http://localhost:8080/DxProject"
+    || AppSettings.apitime == "http://203.115.123.91:8085/DxProject" || AppSettings.apitime == "http://localhost:8181/DxProject") {
       return this.http.post<any>(AppSettings.searchpeoplefordevenvironment, jsonData, { withCredentials: true })
     }
     else {
@@ -198,7 +199,8 @@ export class InternalportalserviceService {
     urlSearchParams =  urlSearchParams.append('material', material);
     let jsonData = urlSearchParams.toString();
     console.log("AppSettings.apitime", AppSettings.apitime);
-    if (AppSettings.apitime == "http://115.242.9.72:8085/DxProject" || AppSettings.apitime == "http://localhost:8080/DxProject") {
+    if (AppSettings.apitime == "http://115.242.9.72:8085/DxProject" || AppSettings.apitime == "http://localhost:8080/DxProject"
+    || AppSettings.apitime == "http://203.115.123.91:8085/DxProject" || AppSettings.apitime == "http://localhost:8181/DxProject") {
       return this.http.post<any>(AppSettings.getcustomManagerListfordevenvironment, jsonData, { withCredentials: true })
     }
     else {
