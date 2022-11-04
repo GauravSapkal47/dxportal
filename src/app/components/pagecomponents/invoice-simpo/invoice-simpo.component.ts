@@ -1549,13 +1549,17 @@ export class InvoiceSimpoComponent implements OnInit {
             console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
 
             this.customDelivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-
+            this.customDelivery.invoicetype="E-Invoice";
+            if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+              this.customDelivery.irnDate = null;
+            }
           }
           else {
             this.customDelivery.irnNumber = "";
             if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
               this.customDelivery.irnDate = null;
             }
+            this.customDelivery.invoicetype="Invoice";
           }
           this.customDelivery.type=this.TypeNo;
 
@@ -2018,6 +2022,9 @@ export class InvoiceSimpoComponent implements OnInit {
                 }
                 else {
                   // this.dialogBox.popUpOpen2('Unable to find IRN number and Date', 'error', 'Einvoice')
+                  this.invoiceForm.controls['irnNo'].setValue(null);
+                  this.invoiceForm.controls['irnDate'].setValue(null);
+
                   const dialogConfig = new MatDialogConfig();
                   dialogConfig.data = {
                     message: 'Unable to find IRN number and Date',

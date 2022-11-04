@@ -60,4 +60,5 @@ export class Delivery{
 	 type: string;
      previnvno: string;
      prevponos: string;
+	 invoicetype: string;
 }

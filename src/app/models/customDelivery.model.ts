@@ -53,4 +53,5 @@ export class customDelivery{
     type: string;
     previnvno: string;
     prevponos: string;
+    invoicetype: string;
 }

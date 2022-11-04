@@ -2255,6 +2255,15 @@ submitinvoice() {
         this.uniquelineitems[a].QUANTITY = 0;
       }
     }
+  }else{
+    if(this.full){
+      for (let a = 0; a <= this.uniquelineitems.length - 1; a++) {
+        this.uniquelineitems[a].QUANTITY = this.uniquelineitems[a].BALANCE_QTY;
+        if (this.uniquelineitems[a].QUANTITY == undefined || this.uniquelineitems[a].QUANTITY == "") {
+          this.uniquelineitems[a].QUANTITY = 0;
+        }
+      }
+    }
   }
 
   console.log("is it uniquelineitems============>", this.uniquelineitems);
@@ -2730,11 +2739,17 @@ submitinvoice() {
                       this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
                       console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
                       this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+                      this.delivery.invoicetype="E-Invoice";
+
+                      if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+                        this.delivery.irnDate = null;
+                      }
                     }else {
                       this.delivery.irnNumber = "";
                       if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
                         this.delivery.irnDate = null;
                       }
+                      this.delivery.invoicetype="Invoice";
                     }
 
                     this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
@@ -2942,11 +2957,16 @@ submitinvoice() {
                     this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
                     console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
                     this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+                    this.delivery.invoicetype="E-Invoice";
+                    if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+                      this.delivery.irnDate = null;
+                    }
                   }else {
                     this.delivery.irnNumber = "";
                     if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
                       this.delivery.irnDate = null;
                     }
+                    this.delivery.invoicetype="Invoice";
                   }
                   // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
                   // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
@@ -3558,6 +3578,10 @@ submitinvoice() {
                 }
                 else {
                   // this.dialogBox.popUpOpen2('Unable to find IRN number and Date', 'error', 'Einvoice')
+
+                  this.invoiceForm.controls['irnNo'].setValue(null);
+                  this.invoiceForm.controls['irnDate'].setValue(null);
+
                   const dialogConfig = new MatDialogConfig();
                   dialogConfig.data = {
                     message: 'Unable to find IRN number and Date',
