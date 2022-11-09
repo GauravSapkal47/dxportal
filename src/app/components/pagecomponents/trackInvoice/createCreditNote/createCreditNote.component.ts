@@ -12,6 +12,7 @@ import { TrackOrderListService } from 'app/services/trackOrderList/trackorderlis
 import { parse } from 'path';
 import { MatDialog, MatDialogConfig, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { PopupComponent } from 'app/components/commoncomponents/popup/popup.component';
+import { log } from 'console';
 
 
 @Component({
@@ -22,6 +23,8 @@ import { PopupComponent } from 'app/components/commoncomponents/popup/popup.comp
 export class createCreditNoteComponent implements OnInit {
   @ViewChild(DialogModelComponent) dialogBox: DialogModelComponent;
 
+details:any;
+responce:any;
   invoiceNumber:any;
   ponumber:any;
   creditAdviceList : any =[];
@@ -140,7 +143,10 @@ export class createCreditNoteComponent implements OnInit {
   }
   
   getCreditNoteDetails(){
+
     this.internalportalservice.getCreditNoteDetails(this.adviceNo,this.invoiceNumber,this.ponumber).subscribe(res=>{
+      this.details=JSON.stringify(res);
+      console.log(res);
       res[0].poData[0].AMOUNT = Number(res[0].poData[0].AMOUNT).toFixed(2);
       res[0].poData[0].TAX =  Number(res[0].poData[0].TAX).toFixed(2);
       res[0].poData[0].TOTALAMT =Number(res[0].poData[0].TOTALAMT).toFixed(2);
@@ -157,10 +163,19 @@ export class createCreditNoteComponent implements OnInit {
 
   getInternalCreditNoteDetails(){
     this.internalportalservice.getInternalCreditNoteDetails(this.adviceNo,this.invoiceNumber,this.ponumber).subscribe(res=>{
+      // this.details=JSON.stringify(res);
+
+      
+    //   let resp = JSON.parse(JSON.stringify(res));
+    //   this.details=resp[0].message;
+    //   console.log("responcee===" +resp[0].message);
+    //  console.log(this.details);
+
       res[0].poData[0].AMOUNT = Number(res[0].poData[0].AMOUNT).toFixed(2);
       res[0].poData[0].TAX =  Number(res[0].poData[0].TAX).toFixed(2);
       res[0].poData[0].TOTALAMT =Number(res[0].poData[0].TOTALAMT).toFixed(2);  
-      
+    // this.details=resp[0].message;
+    this.creditNoteNo=res[0].poData[0].CREDITNOTENO;
       this.creditNoteDetails.controls['amount'].setValue(res[0].poData[0].AMOUNT);
         this.creditNoteDetails.controls['tax'].setValue(res[0].poData[0].TAX);
         this.creditNoteDetails.controls['totalamt'].setValue(res[0].poData[0].TOTALAMT);
