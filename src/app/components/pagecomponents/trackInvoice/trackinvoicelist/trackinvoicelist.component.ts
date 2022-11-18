@@ -128,6 +128,7 @@ export class TrackInvoiceListComponent implements OnInit {
   extensionType: string;
   invoiceCountAsPerStatus:any=[];
   pendingPo :any = 0;
+  ReturnPo :any=0;
   remarklength: number = 160;
 
   constructor(public dialog: MatDialog, private router: Router, private route: ActivatedRoute, private purchaseOrderListService: PurchaseOrderListService,
@@ -219,6 +220,9 @@ export class TrackInvoiceListComponent implements OnInit {
           this.pendingPo = 0;
         }else{
           this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
+        }
+        if(this.ReturnPo = Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+          this.ReturnPo = Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
         }
       }
       if (res[0].message == 'Sucessinvlist') {
@@ -1515,6 +1519,10 @@ checkbox(){
         }else{
           this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
         }
+        if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+          this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
+        }
+        
       }
       if (res[0].message1 == 'Sucessinvlist1') {
         this.mPageNo = 1;
@@ -1974,6 +1982,124 @@ console.log("mpo "+mpo);
 
 
   }
+
+  reopenInvoice(invNo, poNo, vendorid, type,mpo,planttype,invoiceDate) {
+    console.log(type);
+    
+        if (this.invoicenumber != undefined) {
+    
+          this.purchaseOrderListService.getwopodetails(this.invoicenumber).subscribe(res => {
+    
+            console.log("res is here ", res);
+    
+            // this.wopodata = res[0].data;
+    
+            // if (res[0].message == "Success") {
+    
+            //   console.log("res[0].data ==>", this.wopodata);
+    
+            //   sessionStorage.removeItem("invwopodetails");
+    
+            //   sessionStorage.setItem("invwopodetails", JSON.stringify(this.wopodata));
+    
+            // }
+    
+            // this.router.navigate(["invoicesubmission"]
+    console.log("mpo "+mpo);
+            if(mpo != null)
+    
+            {
+    
+              this.router.navigate(["invoicesimpo"]
+    
+              , {
+    
+                queryParams: {
+    
+                  type: btoa(type),
+    
+                  vd: btoa(vendorid),
+    
+                  invNo: btoa(invNo),
+    
+                  poNo: btoa(poNo),
+    
+                  mpo: btoa(mpo),
+    
+                  planttype: btoa(planttype),
+    
+                  invoiceDate: btoa(invoiceDate)
+    
+                }
+    
+              })
+    
+            }
+    
+            else
+    
+            {
+    
+              this.router.navigate(["invoicesubmission"]
+    
+              , {
+    
+                queryParams: {
+    
+                  type: btoa(type),
+    
+                  vd: btoa(vendorid),
+    
+                  invNo: btoa(invNo),
+    
+                  poNo: btoa(poNo),
+                  invoiceDate: btoa(invoiceDate)
+    
+                }
+    
+              })
+    
+            }
+    
+         
+    
+          });
+    
+    
+    
+        }
+    
+        else {
+    
+          // this.router.navigate(["invoicesubmission"]
+    
+          this.router.navigate(["invoicesubmission"]
+    
+            , {
+    
+              queryParams: {
+    
+                type: btoa(type),
+    
+                vd: btoa(vendorid),
+    
+                invNo: btoa(invNo),
+    
+                poNo: btoa(poNo),
+                invoiceDate: btoa(invoiceDate)
+    
+              }
+    
+            })
+    
+    
+    
+        }
+    
+    
+    
+      }
+    
 
   getPlantData(e) {
     this.PlantList = [];

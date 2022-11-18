@@ -62,6 +62,7 @@ export class InvoiceSubmissionComponent implements OnInit {
   successmessage: string;
   success: boolean = false;
   error: boolean = false;
+  reopen: boolean = false;
   AttachmentValidExtension: string[] = ["PDF"];
   ArrayOfSelectedFile: any[] = [];
   InvalidAttachmentFileError =
@@ -186,6 +187,10 @@ export class InvoiceSubmissionComponent implements OnInit {
       this.TypeNo = atob(params.type);
       this.vendorid = atob(params.vd);
       if (this.TypeNo == 'resubmit') {
+        this.invNo = atob(params.invNo);
+        this.ponumber = atob(params.poNo);
+      }
+      if (this.TypeNo == "reopen") {
         this.invNo = atob(params.invNo);
         this.ponumber = atob(params.poNo);
       }
@@ -901,31 +906,29 @@ export class InvoiceSubmissionComponent implements OnInit {
     console.log("why ??", this.invoiceForm.status, this.invoiceForm.value);
     //  console.log("hello============>", this.invoiceForm.controls['totalOrderQty'].value, typeof(this.invoiceForm.controls['totalOrderQty'].value));
     if (this.part) {
-      if (this.invoiceForm.controls['totalOrderQty'].value == 0) {
+      if (this.invoiceForm.controls["totalOrderQty"].value == 0) {
         // this.dialogBox.popUpOpen2('Please enter quantity for atleast one line item', 'success', 'invoicesubmit');
         const dialogConfig = new MatDialogConfig();
         dialogConfig.data = {
-          message: 'Please enter quantity for atleast one line item',
-          condition: 'success',
-          page: 'invoicesubmit'
+          message: "Please enter quantity for atleast one line item",
+          condition: "success",
+          page: "invoicesubmit",
         };
         const mydata = dialogConfig.data;
         console.log("PopupComponent", mydata);
 
         const dialogRef = this.dialog.open(PopupComponent, {
-          panelClass: 'custom-modalbox',
+          panelClass: "custom-modalbox",
 
-          width: '400px',
-          data: { datakey: dialogConfig.data }
-
+          width: "400px",
+          data: { datakey: dialogConfig.data },
         });
-        dialogRef.afterClosed().subscribe(result => {
+        dialogRef.afterClosed().subscribe((result) => {
           console.log(`Dialog result1: ${result}`);
-          this.router.navigate(['/trackInvoiceList']);
+          this.router.navigate(["/trackInvoiceList"]);
         });
         return false;
       }
-
     }
     // return false;
     this.loaderservice.show();
@@ -935,19 +938,27 @@ export class InvoiceSubmissionComponent implements OnInit {
     // return false;
     // debugger;
     console.log("this.part " + this.part);
-    if (this.part || this.TypeNo == 'resubmit') {
+    if (this.part || this.TypeNo == "resubmit") {
       this.quantitylist = [];
       this.lineitemnumberlist = [];
 
       for (let a = 0; a <= this.uniquelineitems.length - 1; a++) {
-        if (this.invoiceForm.controls['orderValue' + a].value == null || this.invoiceForm.controls['orderValue' + a].value == '') {
+        if (
+          this.invoiceForm.controls["orderValue" + a].value == null ||
+          this.invoiceForm.controls["orderValue" + a].value == ""
+        ) {
           // || this.uniquelineitem[a].FORECLOSESTATUSCHECK == 'X'
-          this.invoiceForm.controls['orderValue' + a].setValue(0);
+          this.invoiceForm.controls["orderValue" + a].setValue(0);
         }
 
-        console.log("this.invoiceForm.controls['orderValue' + a].value", this.invoiceForm.controls['orderValue' + a].value);
+        console.log(
+          "this.invoiceForm.controls['orderValue' + a].value",
+          this.invoiceForm.controls["orderValue" + a].value
+        );
 
-        this.quantitylist.push(this.invoiceForm.controls['orderValue' + a].value);
+        this.quantitylist.push(
+          this.invoiceForm.controls["orderValue" + a].value
+        );
         this.lineitemnumberlist.push(this.uniquelineitems[a].LINEITEMNUMBER);
       }
     }
@@ -956,48 +967,1173 @@ export class InvoiceSubmissionComponent implements OnInit {
 
     this.invoicesubmissionarray = [];
 
-    if ((this.viewUploadFile != null && this.viewAttachmentName != null  && this.viewAttachmentName != "") ||
-      (this.withoutpodetails.length != 0 && this.viewAttachmentName != null  && this.viewAttachmentName != "") ||
-      (this.invoicedata.length != 0 && this.viewAttachmentName != null  && this.viewAttachmentName != "")) {
+    if (
+      (this.viewUploadFile != null &&
+        this.viewAttachmentName != null &&
+        this.viewAttachmentName != "") ||
+      (this.withoutpodetails.length != 0 &&
+        this.viewAttachmentName != null &&
+        this.viewAttachmentName != "") ||
+      (this.invoicedata.length != 0 &&
+        this.viewAttachmentName != null &&
+        this.viewAttachmentName != "")
+    ) {
       console.log("inininin");
-      if (this.TypeNo == 'resubmit') {
-        this.trackOrderListService.getVendorReturn(this.ponumber, this.invNo).subscribe(res => {
-          if(res[0].message == " Vendor Return done Sucess")
-          {
-            this.purchaseOrderListService.createcustomdeliveryitems(this.ponumber, this.fullpodate, this.lineitemnumberlist, this.quantitylist).subscribe(res => {
 
-              if (res[0].message == "Success") {
-                
-                this.loaderservice.show();
-                var dcnlist: any = []
-                res[0].dcnvalues.forEach(element => {
-                  dcnlist.push(element)
+      if (this.TypeNo == "resubmit") {
+        this.trackOrderListService
+          .getVendorReturn(this.ponumber, this.invNo)
+          .subscribe((res) => {
+            if (res[0].message == " Vendor Return done Sucess") {
+              this.purchaseOrderListService
+                .createcustomdeliveryitems(
+                  this.ponumber,
+                  this.fullpodate,
+                  this.lineitemnumberlist,
+                  this.quantitylist
+                )
+                .subscribe((res) => {
+                  if (res[0].message == "Success") {
+                    this.loaderservice.show();
+                    var dcnlist: any = [];
+                    res[0].dcnvalues.forEach((element) => {
+                      dcnlist.push(element);
+                    });
+
+                    this.purchaseOrderListService
+                      .setDCNumbers(this.ponumber, dcnlist)
+                      .subscribe((res1) => {
+                        console.log(
+                          "return========>",
+                          res1[0].message,
+                          res1[0].orderitems
+                        );
+
+                        this.orderlineitems = res1[0].orderitems;
+                        // res1[0].orderitems.forEach(data => {
+                        //   this.orderlineitems.push(data);
+                        // });
+
+                        for (let s = 0; s < this.orderlineitems.length; s++) {
+                          if (
+                            this.orderlineitems[s].QUANTITY == 0 ||
+                            this.orderlineitems[s].QUANTITY == 0.0
+                          ) {
+                            this.nullDCN.push(this.orderlineitems[s].DC);
+                          }
+                        }
+                        console.log(
+                          this.uniquelineitems,
+                          "this.uniquelineitems.length"
+                        );
+                        console.log(
+                          this.orderlineitems,
+                          "this.orderlineitems.length"
+                        );
+                        for (var k = 0; k < this.uniquelineitems.length; k++) {
+                          this.uniquelineitems[k].order =
+                            this.orderlineitems[k].DC;
+                        }
+
+                        // this.loaderservice.hide();
+
+                        // this.actualfilename = this.viewUploadFile.name;
+
+                        // var fileName = this.getFileNameWOExtention(this.viewUploadFile.name) + "_";
+                        // fileName = this.getTimeStampFileName(fileName, this.getExtensionOfFile(this.viewUploadFile.name));
+                        // var fileName2 = fileName;
+                        // fileName = this.ponumber + "_invoice_" + fileName;
+                        // this.savedfilename = fileName;
+                        // console.log("FileName here" + fileName);
+                        // this.purchaseOrderListService.fileupload(this.viewUploadFile, fileName).subscribe(res => {
+                        //   console.log(JSON.stringify(res))
+                        //   res[0].data = true;
+                        //   if (res.length == 0) {
+                        //     this.loaderservice.hide();
+                        //     return false;
+                        //   }
+                        // else if (res[0].status == "Success") {
+
+                        // return false
+                        console.log(
+                          "this.uniquelineitems >>",
+                          this.uniquelineitems
+                        );
+                        console.log(
+                          "this.orderlineitems >>",
+                          this.orderlineitems
+                        );
+                        console.log(
+                          "this.uniquelineitems.length >>" +
+                            this.uniquelineitems.length
+                        );
+                        console.log(
+                          "this.orderlineitems.length >>" +
+                            this.orderlineitems.length
+                        );
+                        // return;
+                        var count = 0;
+                        for (var a = 0; a < this.uniquelineitems.length; a++) {
+                          console.log("a is here =>" + a);
+                          for (var b = 0; b < this.orderlineitems.length; b++) {
+                            // debugger
+                            console.log(
+                              this.uniquelineitems[a].LINEITEMNUMBER,
+                              "this.uniquelineitems.LINEITEMNUMBER"
+                            );
+                            console.log(
+                              this.orderlineitems[b].LINEITEMNUMBER,
+                              "this.orderlineitems.LINEITEMNUMBER"
+                            );
+                            if (this.grntobeinvoicelist.length == 0) {
+                              if (
+                                this.uniquelineitems[a].LINEITEMNUMBER ==
+                                this.orderlineitems[b].LINEITEMNUMBER
+                              ) {
+                                // var quantity = $('#Quantity' + b).val();
+                                // var itemAmount = $('#itemAmount' + b).val();
+                                // debugger;
+                                console.log(
+                                  "this.uniquelineitems[a].LINEITEMNUMBER " +
+                                    this.uniquelineitems[a].LINEITEMNUMBER +
+                                    "BALANCE_QTY " +
+                                    this.uniquelineitems[a].BALANCE_QTY
+                                );
+
+                                var quantity = this.orderlineitems[b].QUANTITY;
+                                var itemAmount = this.orderlineitems[b].AMOUNT;
+                                console.log("quantity " + quantity);
+                                if (quantity > 0) {
+                                  this.delivery = new Delivery();
+                                  console.log("a is not empty ==>" + a);
+                                  this.delivery.bid =
+                                    sessionStorage.getItem("Bid");
+                                  this.delivery.po_num = this.ponumber;
+                                  if (this.invoice != true) {
+                                    console.log(
+                                      "this.invoiceForm.controls['irnNo'].value;",
+                                      this.invoiceForm.controls["irnNo"].value
+                                    );
+                                    this.delivery.irnNumber =
+                                      this.invoiceForm.controls["irnNo"].value;
+                                    console.log(
+                                      "test date===========>",
+                                      this.invoiceForm.controls["irnDate"].value
+                                    );
+
+                                    this.delivery.irnDate = moment(
+                                      new Date(
+                                        this.invoiceForm.controls[
+                                          "irnDate"
+                                        ].value
+                                      )
+                                    ).format("DD/MM/YYYY");
+                                  } else {
+                                    this.delivery.irnNumber = "";
+                                    if (
+                                      this.invoiceForm.controls["irnDate"]
+                                        .value == null ||
+                                      this.invoiceForm.controls["irnDate"]
+                                        .value == ""
+                                    ) {
+                                      this.delivery.irnDate = null;
+                                    }
+                                  }
+                                  // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+                                  // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+                                  this.delivery.invoiceNumber =
+                                    this.invoiceForm.controls[
+                                      "invoiceNo"
+                                    ].value.trim();
+
+                                  this.delivery.invoiceDate = moment(
+                                    new Date(
+                                      this.invoiceForm.controls[
+                                        "invoiceDate"
+                                      ].value
+                                    )
+                                  ).format("DD/MM/YYYY");
+                                  console.log(
+                                    "this.delivery.invoiceDate " +
+                                      this.delivery.invoiceDate
+                                  );
+                                  // this.delivery.referenceNumber = ""
+                                  // this.delivery.grnnumber = ""
+                                  this.delivery.rateperquantity =
+                                    this.uniquelineitems[a].RATEPERQTY.replace(
+                                      /,/g,
+                                      ""
+                                    );
+                                  if (this.tobeinvoiced == false) {
+                                    this.delivery.lineItemNumber =
+                                      this.uniquelineitems[a].LINEITEMNUMBER;
+                                    this.delivery.lineitemtext =
+                                      this.uniquelineitems[a].LINEITEMTEXT;
+                                  } else {
+                                    this.delivery.lineItemNumber =
+                                      this.uniquelineitems[
+                                        a
+                                      ].TOINVOICELINEITEMNUMBER;
+                                    this.delivery.lineitemtext =
+                                      this.uniquelineitems[
+                                        a
+                                      ].TOINVOICELINEITEMTEXT;
+                                  }
+
+                                  this.delivery.orderNumber =
+                                    this.orderlineitems[b].DC;
+                                  if (this.TypeNo == "resubmit") {
+                                    this.delivery.beforesubmissioninvoicenumber =
+                                      this.invNo;
+                                    this.delivery.businessPartnerText =
+                                      this.invoicedata[0].BUSSINESSPARTNERTEXT;
+                                    this.delivery.contactPerson =
+                                      this.invoicedata[0].REQUSITIONER;
+                                    this.delivery.buyerid =
+                                      this.invoicedata[0].BUYER;
+
+                                    console.log(
+                                      "Hello========>",
+                                      this.invoicedata[0].BUSSINESSPARTNERTEXT,
+                                      this.invoicedata[0].REQUSITIONER,
+                                      this.invoicedata[0].BUYER
+                                    );
+                                  } else {
+                                    this.delivery.beforesubmissioninvoicenumber =
+                                      "";
+                                    this.delivery.businessPartnerText =
+                                      sessionStorage.getItem(
+                                        "Bussinesspartnertext"
+                                      );
+                                    this.delivery.contactPerson =
+                                      sessionStorage.getItem("Requisitioner");
+                                    this.delivery.buyerid =
+                                      sessionStorage.getItem("Buyer");
+                                  }
+                                  // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
+                                  console.log(
+                                    this.delivery.orderNumber,
+                                    "this.delivery.orderNumber"
+                                  );
+                                  // this.delivery.quantity = quantity;
+                                  this.delivery.quantity =
+                                    this.orderlineitems[b].QUANTITY;
+                                  console.log(
+                                    this.delivery.orderNumber,
+                                    " this.delivery.orderNumber"
+                                  );
+                                  console.log(
+                                    this.delivery.quantity,
+                                    " this.delivery.quantity"
+                                  );
+                                  this.delivery.uOM =
+                                    this.uniquelineitems[a].UNITOFMEASURE;
+
+                                  this.delivery.contactPersonPhone =
+                                    this.uniquelineitems[a].CONTACTPERSONPHONE;
+                                  // this.delivery.vendorID = this.uniquelineitems[a].vendorId;
+                                  this.delivery.vendorID = this.vendorid;
+                                  this.delivery.company =
+                                    this.uniquelineitems[a].COMPANY;
+                                  this.delivery.plant =
+                                    this.uniquelineitems[a].PLANT;
+                                  this.delivery.department =
+                                    this.uniquelineitems[a].DEPARTMENT;
+                                  this.delivery.storagelocation =
+                                    this.uniquelineitems[a].STORAGELOCATION;
+                                  this.delivery.costCentre =
+                                    this.uniquelineitems[a].COSTCENTRE;
+                                  this.delivery.category =
+                                    this.uniquelineitems[a].CATEGORY;
+
+                                  this.delivery.profileID = "";
+                                  this.delivery.invoiceDocumentPath = "";
+                                  this.delivery.iGSTAmount = "";
+                                  this.delivery.cGSTAmount = "";
+                                  this.delivery.sgstAmount = "";
+                                  this.delivery.servicenumber =
+                                    this.uniquelineitems[a].SERVICENUMBER;
+                                  // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
+                                  console.log(
+                                    "============>",
+                                    this.grntobeinvoicelist
+                                  );
+
+                                  if (this.tobeinvoiced == false) {
+                                    this.delivery.grnnumber = "-";
+                                    this.delivery.uniquereferencenumber = "-";
+                                    this.delivery.saplineitemnumber = "-";
+                                    this.delivery.srcnnumber = "-";
+                                  } else {
+                                    this.delivery.servicenumber =
+                                      this.uniquelineitems[a].SERVICENUMBER;
+                                    this.delivery.dcnumber =
+                                      this.uniquelineitems[a].DCNUMBER;
+                                    console.log(
+                                      " this.delivery.dcnumber======>",
+                                      this.delivery.dcnumber
+                                    );
+                                    if (
+                                      this.uniquelineitems[a].SRCNUMBER != null
+                                    ) {
+                                      this.delivery.srcnnumber =
+                                        this.uniquelineitems[a].SRCNUMBER;
+                                    } else {
+                                      this.delivery.srcnnumber = "-";
+                                    }
+
+                                    this.delivery.grnnumber =
+                                      this.uniquelineitems[a].GRNMAPPNUMBER;
+                                    this.delivery.uniquereferencenumber =
+                                      this.uniquelineitems[
+                                        a
+                                      ].SAPUNIQUEREFERENCENO;
+                                    this.delivery.saplineitemnumber =
+                                      this.uniquelineitems[a].SAPLINEITEMNO;
+                                  }
+
+                                  // this.delivery.totalAmount = itemAmount;
+                                  this.delivery.totalAmount =
+                                    this.invoiceForm.controls[
+                                      "TotalinctaxAmount"
+                                    ].value
+                                      .toString()
+                                      .replace(/,/g, "");
+                                  this.delivery.description =
+                                    this.invoiceForm.controls[
+                                      "description"
+                                    ].value;
+                                  this.delivery.remark =
+                                    this.invoiceForm.controls["remarks"].value;
+                                  this.delivery.totalamtinctaxes =
+                                    this.invoiceForm.controls[
+                                      "TotalinctaxAmount"
+                                    ].value
+                                      .toString()
+                                      .replace(/,/g, "");
+                                  this.delivery.taxamount =
+                                    this.invoiceForm.controls["taxAmount"].value
+                                      .toString()
+                                      .replace(/,/g, "");
+                                  this.delivery.status = "P";
+
+                                  if (this.invoicefilechanged == false) {
+                                    if (this.TypeNo == "resubmit") {
+                                      this.delivery.actualfilename =
+                                        this.actualresubmitfilename;
+                                      this.delivery.savedfilename =
+                                        this.savedresubmitfilename;
+                                    } else {
+                                      this.delivery.actualfilename =
+                                        this.actualfilenameofwopo;
+                                      this.delivery.savedfilename =
+                                        this.savedfilenameofwopo;
+                                    }
+                                  } else {
+                                    this.delivery.actualfilename =
+                                      this.actualfilename;
+                                    this.delivery.savedfilename =
+                                      this.savedfilename;
+                                  }
+
+                                  this.delivery.material =
+                                    this.uniquelineitems[a].MATERIAL;
+                                  this.delivery.createdby =
+                                    sessionStorage.getItem("loginUser");
+                                  this.delivery.managerid =
+                                    "sachin.kale@timesgroup.com";
+                                  if (
+                                    this.invoiceForm.controls[
+                                      "billofladingdate"
+                                    ].value != null
+                                  ) {
+                                    this.delivery.billofladingdate = moment(
+                                      new Date(
+                                        this.invoiceForm.controls[
+                                          "billofladingdate"
+                                        ].value
+                                      )
+                                    ).format("DD/MM/YYYY");
+                                  } else {
+                                    this.delivery.billofladingdate =
+                                      "Invalid date";
+                                  }
+                                  console.log(
+                                    "this.delivery.billofladingdate " +
+                                      this.delivery.billofladingdate
+                                  );
+                                  // return;
+                                  // this.invoiceForm.controls['billofladingdate'].value;
+
+                                  this.delivery.balance_qty = Number(
+                                    this.uniquelineitems[a].BALANCE_QTY
+                                  );
+                                  console.log("a is here " + a);
+                                  console.log(
+                                    "this.uniquelineitems[a].BALANCE_QTY is here " +
+                                      this.uniquelineitems[a].BALANCE_QTY
+                                  );
+                                  if (this.grntobeinvoicelist.length == 0) {
+                                    if (
+                                      this.part ||
+                                      this.TypeNo == "resubmit"
+                                    ) {
+                                      this.delivery.invoiceamount =
+                                        this.invoiceForm.controls[
+                                          "calRealtime" + a
+                                        ].value;
+                                    } else if (this.full) {
+                                      this.delivery.invoiceamount =
+                                        this.uniquelineitems[a].INVAMOUNT;
+                                    }
+                                  } else {
+                                    this.delivery.invoiceamount =
+                                      this.uniquelineitems[a].INVAMOUNT;
+                                  }
+
+                                  this.delivery.multiplesavedfilename = "";
+                                  this.delivery.multipleactualfilename = "";
+
+                                  if (this.multiplefilechanged == true) {
+                                    for (
+                                      var c = 0;
+                                      c < this.ArrayOfSelectedFilename.length;
+                                      c++
+                                    ) {
+                                      this.delivery.multipleactualfilename =
+                                        this.delivery.multipleactualfilename +
+                                        this.ArrayOfSelectedFilename[c] +
+                                        ",";
+                                    }
+                                    for (
+                                      var x = 0;
+                                      x < this.ArrayOfSelectedSavedFile.length;
+                                      x++
+                                    ) {
+                                      this.delivery.multiplesavedfilename =
+                                        this.delivery.multiplesavedfilename +
+                                        this.ArrayOfSelectedSavedFile[x] +
+                                        ",";
+                                    }
+                                    this.delivery.multipleactualfilename =
+                                      this.delivery.multipleactualfilename.slice(
+                                        0,
+                                        -1
+                                      );
+                                    this.delivery.multiplesavedfilename =
+                                      this.delivery.multiplesavedfilename.slice(
+                                        0,
+                                        -1
+                                      );
+                                    console.log(
+                                      "this.delivery.multipleactualfilename ",
+                                      this.delivery.multipleactualfilename
+                                    );
+                                    console.log(
+                                      "this.delivery.multiplesavedfilename ",
+                                      this.delivery.multiplesavedfilename
+                                    );
+                                  } else {
+                                    if (
+                                      sessionStorage.getItem("invwopodetails")
+                                    ) {
+                                      this.delivery.multipleactualfilename =
+                                        this.withoutpodetails[0].SUPPORTACTFILENAME;
+                                      this.delivery.multiplesavedfilename =
+                                        this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
+                                    } else if (this.TypeNo == "resubmit") {
+                                      this.delivery.multipleactualfilename =
+                                        this.invoicedata[0].MULTIACTUALFILENAME;
+                                      this.delivery.multiplesavedfilename =
+                                        this.invoicedata[0].MULTISAVEDFILENAME;
+                                    } else {
+                                      this.delivery.multipleactualfilename = "";
+                                      this.delivery.multiplesavedfilename = "";
+                                    }
+                                  }
+                                  console.log(
+                                    "this.delivery.multipleactualfilename ",
+                                    this.delivery.multipleactualfilename
+                                  );
+                                  console.log(
+                                    "this.delivery.multiplesavedfilename ",
+                                    this.delivery.multiplesavedfilename
+                                  );
+
+                                  // this.delivery.multipleactualfilename=null;
+                                  // this.delivery.multiplesavedfilename=null;
+                                  // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
+                                  // this.delivery.modified_by = sessionStorage.getItem("loginUser");
+                                  // for(var j=0;j<this.uniquelineitem.length;j++)
+                                  // {
+                                  //   if(this.uniquelineitem[j].PONUMBER == this.uniquelineitems[a].PO_NUMBER)
+                                  //   {
+                                  //     delivery.buyerid = this.uniquelineitem[j].BUYER;
+                                  //   }
+                                  // }
+                                  // delivery.buyerid = "sachin.mehta@timesgroup.com"
+
+                                  this.delivery.stage = "1";
+                                  console.log(
+                                    "this.delivery ==>",
+                                    this.delivery.balance_qty
+                                  );
+                                  this.invoicesubmissionarray.push(
+                                    this.delivery
+                                  );
+                                  console.log(
+                                    "this.invoicesubmissionarray ==>",
+                                    this.invoicesubmissionarray
+                                  );
+                                }
+                              }
+                            } else {
+                              console.log("in else" + count);
+
+                              if (
+                                this.uniquelineitems[a]
+                                  .TOINVOICELINEITEMNUMBER ==
+                                  this.orderlineitems[b].LINEITEMNUMBER &&
+                                this.uniquelineitems[a].order ==
+                                  this.orderlineitems[b].DC
+                              ) {
+                                console.log("count is here " + count);
+                                var quantity = this.orderlineitems[b].QUANTITY;
+                                var itemAmount = this.orderlineitems[b].AMOUNT;
+                                console.log("quantity " + quantity);
+                                // if (quantity > 0) {
+                                this.delivery = new Delivery();
+                                console.log("a is not empty ==>" + a);
+                                this.delivery.bid =
+                                  sessionStorage.getItem("Bid");
+                                this.delivery.po_num = this.ponumber;
+                                if (this.invoice != true) {
+                                  console.log(
+                                    "this.invoiceForm.controls['irnNo'].value;",
+                                    this.invoiceForm.controls["irnNo"].value
+                                  );
+                                  this.delivery.irnNumber =
+                                    this.invoiceForm.controls["irnNo"].value;
+                                  console.log(
+                                    "test date===========>",
+                                    this.invoiceForm.controls["irnDate"].value
+                                  );
+
+                                  this.delivery.irnDate = moment(
+                                    new Date(
+                                      this.invoiceForm.controls["irnDate"].value
+                                    )
+                                  ).format("DD/MM/YYYY");
+                                } else {
+                                  this.delivery.irnNumber = "";
+                                  if (
+                                    this.invoiceForm.controls["irnDate"]
+                                      .value == null ||
+                                    this.invoiceForm.controls["irnDate"]
+                                      .value == ""
+                                  ) {
+                                    this.delivery.irnDate = null;
+                                  }
+                                }
+                                // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+                                // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+                                this.delivery.invoiceNumber =
+                                  this.invoiceForm.controls[
+                                    "invoiceNo"
+                                  ].value.trim();
+
+                                this.delivery.invoiceDate = moment(
+                                  new Date(
+                                    this.invoiceForm.controls[
+                                      "invoiceDate"
+                                    ].value
+                                  )
+                                ).format("DD/MM/YYYY");
+                                console.log(
+                                  "this.delivery.invoiceDate " +
+                                    this.delivery.invoiceDate
+                                );
+                                // this.delivery.referenceNumber = ""
+                                // this.delivery.grnnumber = ""
+                                this.delivery.rateperquantity =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICERATEPERQTY.replace(/,/g, "");
+
+                                this.delivery.lineItemNumber =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICELINEITEMNUMBER;
+                                this.delivery.lineitemtext =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICELINEITEMTEXT;
+                                this.delivery.orderNumber =
+                                  this.orderlineitems[b].DC;
+                                if (this.TypeNo == "resubmit") {
+                                  this.delivery.beforesubmissioninvoicenumber =
+                                    this.invNo;
+                                  this.delivery.businessPartnerText =
+                                    this.invoicedata[0].BUSSINESSPARTNERTEXT;
+                                  this.delivery.contactPerson =
+                                    this.invoicedata[0].REQUSITIONER;
+                                  this.delivery.buyerid =
+                                    this.invoicedata[0].BUYER;
+
+                                  console.log(
+                                    "Hello========>",
+                                    this.invoicedata[0].BUSSINESSPARTNERTEXT,
+                                    this.invoicedata[0].REQUSITIONER,
+                                    this.invoicedata[0].BUYER
+                                  );
+                                } else {
+                                  this.delivery.beforesubmissioninvoicenumber =
+                                    "";
+                                  this.delivery.businessPartnerText =
+                                    sessionStorage.getItem(
+                                      "Bussinesspartnertext"
+                                    );
+                                  this.delivery.contactPerson =
+                                    sessionStorage.getItem("Requisitioner");
+                                  this.delivery.buyerid =
+                                    sessionStorage.getItem("Buyer");
+                                }
+                                // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
+                                console.log(
+                                  this.delivery.orderNumber,
+                                  "this.delivery.orderNumber"
+                                );
+                                // this.delivery.quantity = quantity;
+                                this.delivery.quantity =
+                                  this.orderlineitems[b].QUANTITY;
+                                console.log(
+                                  this.delivery.orderNumber,
+                                  " this.delivery.orderNumber"
+                                );
+                                console.log(
+                                  this.grnuniquelineitems[a]
+                                    .TOINVOICEUNITOFMEASURE,
+                                  " this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE"
+                                );
+                                this.delivery.uOM =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICEUNITOFMEASURE;
+                                this.delivery.contactPersonPhone =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICECONTACTPERSONPHONE;
+                                this.delivery.company =
+                                  this.grnuniquelineitems[a].TOINVOICECOMPANY;
+                                this.delivery.plant =
+                                  this.grnuniquelineitems[a].TOINVOICEPLANT;
+                                this.delivery.department =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICEDEPARTMENT;
+                                this.delivery.storagelocation =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICESTORAGELOCATION;
+                                this.delivery.costCentre =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICECOSTCENTRE;
+                                this.delivery.category =
+                                  this.grnuniquelineitems[a].TOINVOICECATEGORY;
+
+                                this.delivery.vendorID = this.vendorid;
+                                this.delivery.profileID = "";
+                                this.delivery.invoiceDocumentPath = "";
+                                this.delivery.iGSTAmount = "";
+                                this.delivery.cGSTAmount = "";
+                                this.delivery.sgstAmount = "";
+                                // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
+                                console.log(
+                                  "============>",
+                                  this.grntobeinvoicelist
+                                );
+
+                                // if (this.tobeinvoiced == false) {
+                                //   this.delivery.grnnumber = "-";
+                                //   this.delivery.uniquereferencenumber = "-";
+                                //   this.delivery.saplineitemnumber = "-";
+                                //   this.delivery.srcnnumber = "-";
+                                // }
+                                // else {
+                                this.delivery.servicenumber =
+                                  this.grnuniquelineitems[a].SERVICENUMBER;
+                                this.delivery.dcnumber =
+                                  this.grnuniquelineitems[a].DCNUMBER;
+                                console.log(
+                                  " this.delivery.dcnumber======>",
+                                  this.delivery.dcnumber
+                                );
+                                if (
+                                  this.grnuniquelineitems[a].SRCNUMBER != null
+                                ) {
+                                  this.delivery.srcnnumber =
+                                    this.grnuniquelineitems[a].SRCNUMBER;
+                                } else {
+                                  this.delivery.srcnnumber = "-";
+                                }
+
+                                this.delivery.grnnumber =
+                                  this.grnuniquelineitems[a].GRNMAPPNUMBER;
+                                this.delivery.uniquereferencenumber =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].SAPUNIQUEREFERENCENO;
+                                this.delivery.saplineitemnumber =
+                                  this.grnuniquelineitems[a].SAPLINEITEMNO;
+                                // }
+
+                                // this.delivery.totalAmount = itemAmount;
+                                this.delivery.totalAmount =
+                                  this.invoiceForm.controls[
+                                    "TotalinctaxAmount"
+                                  ].value
+                                    .toString()
+                                    .replace(/,/g, "");
+                                this.delivery.description =
+                                  this.invoiceForm.controls[
+                                    "description"
+                                  ].value;
+                                this.delivery.remark =
+                                  this.invoiceForm.controls["remarks"].value;
+                                this.delivery.totalamtinctaxes =
+                                  this.invoiceForm.controls[
+                                    "TotalinctaxAmount"
+                                  ].value
+                                    .toString()
+                                    .replace(/,/g, "");
+                                this.delivery.taxamount =
+                                  this.invoiceForm.controls["taxAmount"].value
+                                    .toString()
+                                    .replace(/,/g, "");
+                                this.delivery.status = "P";
+
+                                if (this.invoicefilechanged == false) {
+                                  if (this.TypeNo == "resubmit") {
+                                    this.delivery.actualfilename =
+                                      this.actualresubmitfilename;
+                                    this.delivery.savedfilename =
+                                      this.savedresubmitfilename;
+                                  } else {
+                                    this.delivery.actualfilename =
+                                      this.actualfilenameofwopo;
+                                    this.delivery.savedfilename =
+                                      this.savedfilenameofwopo;
+                                  }
+                                } else {
+                                  this.delivery.actualfilename =
+                                    this.actualfilename;
+
+                                  this.delivery.savedfilename =
+                                    this.savedfilename;
+                                }
+                                this.delivery.material =
+                                  this.grnuniquelineitems[a].TOINVOICEMATERIAL;
+                                this.delivery.createdby =
+                                  sessionStorage.getItem("loginUser");
+                                this.delivery.managerid =
+                                  "sachin.kale@timesgroup.com";
+                                if (
+                                  this.invoiceForm.controls["billofladingdate"]
+                                    .value != null
+                                ) {
+                                  this.delivery.billofladingdate = moment(
+                                    new Date(
+                                      this.invoiceForm.controls[
+                                        "billofladingdate"
+                                      ].value
+                                    )
+                                  ).format("DD/MM/YYYY");
+                                } else {
+                                  this.delivery.billofladingdate =
+                                    "Invalid date";
+                                }
+                                console.log(
+                                  "this.delivery.billofladingdate " +
+                                    this.delivery.billofladingdate
+                                );
+                                // return;
+                                // this.invoiceForm.controls['billofladingdate'].value;
+
+                                this.delivery.balance_qty = Number(
+                                  this.grnuniquelineitems[a].BALANCE_QTY
+                                );
+                                this.delivery.invoiceamount =
+                                  this.grnuniquelineitems[
+                                    a
+                                  ].TOINVOICETOTALAMOUNT;
+
+                                this.delivery.multiplesavedfilename = "";
+                                this.delivery.multipleactualfilename = "";
+
+                                if (this.multiplefilechanged == true) {
+                                  for (
+                                    var c = 0;
+                                    c < this.ArrayOfSelectedFilename.length;
+                                    c++
+                                  ) {
+                                    this.delivery.multipleactualfilename =
+                                      this.delivery.multipleactualfilename +
+                                      this.ArrayOfSelectedFilename[c] +
+                                      ",";
+                                  }
+                                  for (
+                                    var x = 0;
+                                    x < this.ArrayOfSelectedSavedFile.length;
+                                    x++
+                                  ) {
+                                    this.delivery.multiplesavedfilename =
+                                      this.delivery.multiplesavedfilename +
+                                      this.ArrayOfSelectedSavedFile[x] +
+                                      ",";
+                                  }
+                                  this.delivery.multipleactualfilename =
+                                    this.delivery.multipleactualfilename.slice(
+                                      0,
+                                      -1
+                                    );
+                                  this.delivery.multiplesavedfilename =
+                                    this.delivery.multiplesavedfilename.slice(
+                                      0,
+                                      -1
+                                    );
+                                  console.log(
+                                    "this.delivery.multipleactualfilename ",
+                                    this.delivery.multipleactualfilename
+                                  );
+                                  console.log(
+                                    "this.delivery.multiplesavedfilename ",
+                                    this.delivery.multiplesavedfilename
+                                  );
+                                } else {
+                                  if (
+                                    sessionStorage.getItem("invwopodetails")
+                                  ) {
+                                    this.delivery.multipleactualfilename =
+                                      this.withoutpodetails[0].SUPPORTACTFILENAME;
+                                    this.delivery.multiplesavedfilename =
+                                      this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
+                                  } else if (this.TypeNo == "resubmit") {
+                                    this.delivery.multipleactualfilename =
+                                      this.invoicedata[0].MULTIACTUALFILENAME;
+                                    this.delivery.multiplesavedfilename =
+                                      this.invoicedata[0].MULTISAVEDFILENAME;
+                                  } else {
+                                    this.delivery.multipleactualfilename = "";
+                                    this.delivery.multiplesavedfilename = "";
+                                  }
+                                }
+                                console.log(
+                                  "this.delivery.multipleactualfilename ",
+                                  this.delivery.multipleactualfilename
+                                );
+                                console.log(
+                                  "this.delivery.multiplesavedfilename ",
+                                  this.delivery.multiplesavedfilename
+                                );
+
+                                // this.delivery.multipleactualfilename=null;
+                                // this.delivery.multiplesavedfilename=null;
+                                // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
+                                // this.delivery.modified_by = sessionStorage.getItem("loginUser");
+                                // for(var j=0;j<this.uniquelineitem.length;j++)
+                                // {
+                                //   if(this.uniquelineitem[j].PONUMBER == this.uniquelineitems[a].PO_NUMBER)
+                                //   {
+                                //     delivery.buyerid = this.uniquelineitem[j].BUYER;
+                                //   }
+                                // }
+                                // delivery.buyerid = "sachin.mehta@timesgroup.com"
+
+                                this.delivery.stage = "1";
+                                console.log(
+                                  "this.delivery ==>",
+                                  this.delivery.balance_qty
+                                );
+                                this.invoicesubmissionarray.push(this.delivery);
+                                console.log(
+                                  "this.invoicesubmissionarray ==>",
+                                  this.invoicesubmissionarray
+                                );
+                                // }
+                              }
+                              count++;
+                            }
+                          }
+                        }
+                        // this.loaderservice.hide()
+                        // return false
+                        // this.delivery.actualfilename = null
+                        this.purchaseOrderListService
+                          .sendEmaildemo(this.invoicesubmissionarray)
+                          .subscribe((res) => {
+                            sessionStorage.removeItem("invwopodetails");
+                            if (res[0].message == "Success") {
+                              this.purchaseOrderListService
+                                .removeEmptyDeliveries(
+                                  this.ponumber,
+                                  this.nullDCN
+                                )
+                                .subscribe((res) => {
+                                  if (res[0].message == "Success") {
+                                    this.loaderservice.hide();
+                                    // this.dialogBox.popUpOpen2('Invoice has been submitted successfully', 'success', 'invoicesubmit');
+                                    const dialogConfig = new MatDialogConfig();
+                                    dialogConfig.data = {
+                                      message:
+                                        "Invoice has been submitted successfully",
+                                      condition: "success",
+                                      page: "invoicesubmit",
+                                    };
+                                    const mydata = dialogConfig.data;
+                                    console.log("PopupComponent", mydata);
+
+                                    const dialogRef = this.dialog.open(
+                                      PopupComponent,
+                                      {
+                                        panelClass: "custom-modalbox",
+
+                                        width: "400px",
+                                        data: { datakey: dialogConfig.data },
+                                      }
+                                    );
+                                    dialogRef
+                                      .afterClosed()
+                                      .subscribe((result) => {
+                                        console.log(
+                                          `Dialog result1: ${result}`
+                                        );
+                                        this.router.navigate([
+                                          "/trackInvoiceList",
+                                        ]);
+                                      });
+                                  }
+                                });
+                              // sessionStorage.removeItem("invAllDetails");
+                              // sessionStorage.removeItem("invsubmissionorderDetails");
+                              // sessionStorage.removeItem("invsubmissionDetails");
+                              // this.dialogBox.popUpOpen2('Invoice has been submitted successfully','success','invoicesubmit');
+                              // this.toastr.success("Invoice Has Been Submitted Successfully")
+                              console.log("Inin");
+                              this.invoiceForm.reset();
+                              // this.invoiceconfile = null;
+                              this.viewAttachmentName = "";
+                              this.successmessage =
+                                "Invoice Has Been Submitted Successfully";
+                              this.success = true;
+                              // this.showPopup();
+                            } else {
+                              this.loaderservice.hide();
+                              // this.dialogBox.popUpOpen2('Invoice Number Already Exist.', 'error', 'invoicesubmit');
+                              const dialogConfig = new MatDialogConfig();
+                              dialogConfig.data = {
+                                message: res[0].Uniquemessage,
+                                // message: 'Invoice Number Already Exist.',
+                                condition: "error",
+                                page: "invoicesubmit",
+                                specific: "note",
+                              };
+                              const mydata = dialogConfig.data;
+                              console.log("PopupComponent", mydata);
+
+                              const dialogRef = this.dialog.open(
+                                PopupComponent,
+                                {
+                                  panelClass: "custom-modalbox",
+
+                                  width: "400px",
+                                  data: { datakey: dialogConfig.data },
+                                }
+                              );
+                              dialogRef.afterClosed().subscribe((result) => {
+                                console.log(`Dialog result1: ${result}`);
+                              });
+                              // this.toastr.error(res[0].message)
+                              // this.dialogBox.popUpOpen2('Error while submitting. Please try again','error','invoicesubmit');
+                              this.successmessage = res[0].Uniquemessage;
+                              this.error = true;
+                              // this.showPopup();
+                            }
+                            this.loaderservice.hide();
+                          });
+                        // this.loaderservice.hide();
+                        // }
+                      });
+                    // this.loaderservice.hide();
+                    // console.log("autodc===========>",dcnlist);
+                  }
                 });
-      
-                this.purchaseOrderListService.setDCNumbers(this.ponumber, dcnlist).subscribe(res1 => {
-                  console.log("return========>", res1[0].message, res1[0].orderitems);
-      
+            }
+          });
+      }
+      if (this.TypeNo == "reopen") {
+        this.delivery.bid = sessionStorage.getItem("Bid");
+        this.delivery.po_num = this.ponumber;
+        this.delivery.irnNumber = this.invoiceForm.controls["irnNo"].value;
+        this.delivery.irnDate = moment(
+          new Date(this.invoiceForm.controls["irnDate"].value)
+        ).format("DD/MM/YYYY");
+        this.delivery.referenceNumber = "";
+        this.delivery.grnnumber = "";
+        this.delivery.lineItemNumber = "";
+        this.delivery.orderNumber = "";
+        this.delivery.quantity = "";
+        this.delivery.uOM = "";
+        this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
+        this.delivery.contactPersonPhone = "34343";
+        this.delivery.invoiceNumber = this.invoiceForm.controls["invoiceNo"].value.trim();
+        this.delivery.vendorID = "";
+        this.delivery.company = "";
+        this.delivery.plant = "43434";
+        this.delivery.department = "35667";
+        this.delivery.costCentre = "6656";
+        this.delivery.category = "65656";
+        this.delivery.businessPartnerText = "656456";
+        this.delivery.profileID = "56456";
+        this.delivery.invoiceDocumentPath = "456456";
+        this.delivery.iGSTAmount = "2342";
+        this.delivery.cGSTAmount = "3445";
+        this.delivery.sgstAmount = "534543";
+        this.delivery.totalAmount = this.invoiceForm.controls["TotalinctaxAmount"].value.toString().replace(/,/g, "");
+        this.delivery.description = "345345";
+        this.delivery.status = "54545";
+        this.delivery.invoiceamount = "345345";
+        this.delivery.actualfilename = "5435435";
+        this.delivery.savedfilename = "53535";
+        this.delivery.createdby = "35435";
+        this.delivery.managerid = "435345";
+        this.delivery.buyerid = "867867";
+        this.delivery.stage = "867856";
+        this.delivery.balance_qty = "645664";
+        this.delivery.rawinvno = "546457";
+        this.delivery.modified_by = "74747";
+        this.delivery.material = "777";
+        this.delivery.rateperquantity = "765765";
+        this.delivery.multipleactualfilename = "67657";
+        this.delivery.multiplesavedfilename = "667";
+        this.delivery.billofladingdate = "67567";
+        // this.delivery.ordervalue = "67567";
+        this.delivery.invoiceDate = moment(
+          new Date(
+            this.invoiceForm.controls["invoiceDate"].value
+          )
+        ).format("DD/MM/YYYY");
+        this.delivery.remark = "67657";
+        this.delivery.totalamtinctaxes = "543534";
+        this.delivery.taxamount =
+        this.invoiceForm.controls["taxAmount"].value
+          .toString()
+          .replace(/,/g, "");
+        this.delivery.storagelocation = "6767";
+        this.delivery.lineitemtext = "787585";
+        this.delivery.uniquereferencenumber = "757";
+        this.delivery.saplineitemnumber = "7567";
+        this.delivery.servicenumber = "567567";
+        this.delivery.beforesubmissioninvoicenumber = "65757";
+        this.delivery.srcnnumber = "7575";
+        this.delivery.dcnumber = "76765";
+        this.delivery.previnvno = this.invNo;
+        this.delivery.previnvdate = moment(new Date(this.invoiceForm.controls["invoiceDate"].value)).format("DD/MM/YYYY");
+        this.delivery.prevponos = "645";
+        this.delivery.type = "reopen";
+        this.delivery.invoicetype = "invoice";
+        this.invoicesubmissionarray.push(this.delivery);
+        this.purchaseOrderListService
+          .sendEmaildemo(this.invoicesubmissionarray)
+          .subscribe((res) => {
+            sessionStorage.removeItem("invwopodetails");
+            if (res[0].message == "Success") {
+              alert();
+                 this.loaderservice.hide();
+            } else {
+              // this.loaderservice.hide();
+              // this.dialogBox.popUpOpen2('Invoice Number Already Exist.', 'error', 'invoicesubmit');
+              const dialogConfig = new MatDialogConfig();
+              dialogConfig.data = {
+                message: res[0].Uniquemessage,
+                // message: 'Invoice Number Already Exist.',
+                condition: "error",
+                page: "invoicesubmit",
+                specific: "note",
+              };
+              const mydata = dialogConfig.data;
+              console.log("PopupComponent", mydata);
+
+              const dialogRef = this.dialog.open(PopupComponent, {
+                panelClass: "custom-modalbox",
+
+                width: "400px",
+                data: { datakey: dialogConfig.data },
+              });
+              dialogRef.afterClosed().subscribe((result) => {
+                console.log(`Dialog result1: ${result}`);
+              });
+              // this.toastr.error(res[0].message)
+              // this.dialogBox.popUpOpen2('Error while submitting. Please try again','error','invoicesubmit');
+              this.successmessage = res[0].Uniquemessage;
+              this.error = true;
+              // this.showPopup();
+            }
+          });
+      } else {
+        this.purchaseOrderListService
+          .createcustomdeliveryitems(
+            this.ponumber,
+            this.fullpodate,
+            this.lineitemnumberlist,
+            this.quantitylist
+          )
+          .subscribe((res) => {
+            if (res[0].message == "Success") {
+              // this.loaderservice.show();
+              var dcnlist: any = [];
+              res[0].dcnvalues.forEach((element) => {
+                dcnlist.push(element);
+              });
+
+              this.purchaseOrderListService
+                .setDCNumbers(this.ponumber, dcnlist)
+                .subscribe((res1) => {
+                  console.log(
+                    "return========>",
+                    res1[0].message,
+                    res1[0].orderitems
+                  );
+
                   this.orderlineitems = res1[0].orderitems;
                   // res1[0].orderitems.forEach(data => {
                   //   this.orderlineitems.push(data);
                   // });
-      
+
                   for (let s = 0; s < this.orderlineitems.length; s++) {
-                    if (this.orderlineitems[s].QUANTITY == 0 || this.orderlineitems[s].QUANTITY == 0.00) {
-                      this.nullDCN.push(this.orderlineitems[s].DC)
+                    if (
+                      this.orderlineitems[s].QUANTITY == 0 ||
+                      this.orderlineitems[s].QUANTITY == 0.0
+                    ) {
+                      this.nullDCN.push(this.orderlineitems[s].DC);
                     }
                   }
-                  console.log(this.uniquelineitems, 'this.uniquelineitems.length');
-                  console.log(this.orderlineitems, 'this.orderlineitems.length');
+                  console.log(
+                    this.uniquelineitems,
+                    "this.uniquelineitems.length"
+                  );
+                  console.log(
+                    this.orderlineitems,
+                    "this.orderlineitems.length"
+                  );
                   for (var k = 0; k < this.uniquelineitems.length; k++) {
                     this.uniquelineitems[k].order = this.orderlineitems[k].DC;
                   }
-      
+
                   // this.loaderservice.hide();
-      
-      
+
                   // this.actualfilename = this.viewUploadFile.name;
-      
+
                   // var fileName = this.getFileNameWOExtention(this.viewUploadFile.name) + "_";
                   // fileName = this.getTimeStampFileName(fileName, this.getExtensionOfFile(this.viewUploadFile.name));
                   // var fileName2 = fileName;
@@ -1012,31 +2148,48 @@ export class InvoiceSubmissionComponent implements OnInit {
                   //     return false;
                   //   }
                   // else if (res[0].status == "Success") {
-      
+
                   // return false
                   console.log("this.uniquelineitems >>", this.uniquelineitems);
                   console.log("this.orderlineitems >>", this.orderlineitems);
-                  console.log("this.uniquelineitems.length >>" + this.uniquelineitems.length);
-                  console.log("this.orderlineitems.length >>" + this.orderlineitems.length);
+                  console.log(
+                    "this.uniquelineitems.length >>" +
+                      this.uniquelineitems.length
+                  );
+                  console.log(
+                    "this.orderlineitems.length >>" + this.orderlineitems.length
+                  );
                   // return;
                   var count = 0;
                   for (var a = 0; a < this.uniquelineitems.length; a++) {
                     console.log("a is here =>" + a);
                     for (var b = 0; b < this.orderlineitems.length; b++) {
                       // debugger
-                      console.log(this.uniquelineitems[a].LINEITEMNUMBER, 'this.uniquelineitems.LINEITEMNUMBER')
-                      console.log(this.orderlineitems[b].LINEITEMNUMBER, 'this.orderlineitems.LINEITEMNUMBER')
+                      console.log(
+                        this.uniquelineitems[a].LINEITEMNUMBER,
+                        "this.uniquelineitems.LINEITEMNUMBER"
+                      );
+                      console.log(
+                        this.orderlineitems[b].LINEITEMNUMBER,
+                        "this.orderlineitems.LINEITEMNUMBER"
+                      );
                       if (this.grntobeinvoicelist.length == 0) {
-                        if (this.uniquelineitems[a].LINEITEMNUMBER == this.orderlineitems[b].LINEITEMNUMBER) {
-      
+                        if (
+                          this.uniquelineitems[a].LINEITEMNUMBER ==
+                          this.orderlineitems[b].LINEITEMNUMBER
+                        ) {
                           // var quantity = $('#Quantity' + b).val();
                           // var itemAmount = $('#itemAmount' + b).val();
                           // debugger;
-                          console.log("this.uniquelineitems[a].LINEITEMNUMBER " + this.uniquelineitems[a].LINEITEMNUMBER +
-                            "BALANCE_QTY " + this.uniquelineitems[a].BALANCE_QTY);
-      
-                          var quantity = this.orderlineitems[b].QUANTITY
-                          var itemAmount = this.orderlineitems[b].AMOUNT
+                          console.log(
+                            "this.uniquelineitems[a].LINEITEMNUMBER " +
+                              this.uniquelineitems[a].LINEITEMNUMBER +
+                              "BALANCE_QTY " +
+                              this.uniquelineitems[a].BALANCE_QTY
+                          );
+
+                          var quantity = this.orderlineitems[b].QUANTITY;
+                          var itemAmount = this.orderlineitems[b].AMOUNT;
                           console.log("quantity " + quantity);
                           if (quantity > 0) {
                             this.delivery = new Delivery();
@@ -1044,195 +2197,334 @@ export class InvoiceSubmissionComponent implements OnInit {
                             this.delivery.bid = sessionStorage.getItem("Bid");
                             this.delivery.po_num = this.ponumber;
                             if (this.invoice != true) {
-                              console.log("this.invoiceForm.controls['irnNo'].value;", this.invoiceForm.controls['irnNo'].value)
-                              this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
-                              console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
-      
-                              this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-      
-                            }
-                            else {
+                              console.log(
+                                "this.invoiceForm.controls['irnNo'].value;",
+                                this.invoiceForm.controls["irnNo"].value
+                              );
+                              this.delivery.irnNumber =
+                                this.invoiceForm.controls["irnNo"].value;
+                              console.log(
+                                "test date===========>",
+                                this.invoiceForm.controls["irnDate"].value
+                              );
+
+                              this.delivery.irnDate = moment(
+                                new Date(
+                                  this.invoiceForm.controls["irnDate"].value
+                                )
+                              ).format("DD/MM/YYYY");
+                            } else {
                               this.delivery.irnNumber = "";
-                              if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+                              if (
+                                this.invoiceForm.controls["irnDate"].value ==
+                                  null ||
+                                this.invoiceForm.controls["irnDate"].value == ""
+                              ) {
                                 this.delivery.irnDate = null;
                               }
                             }
                             // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
                             // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-                            this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
-      
-                            this.delivery.invoiceDate = moment(new Date(this.invoiceForm.controls['invoiceDate'].value)).format("DD/MM/YYYY");
-                            console.log("this.delivery.invoiceDate " + this.delivery.invoiceDate);
+                            this.delivery.invoiceNumber =
+                              this.invoiceForm.controls[
+                                "invoiceNo"
+                              ].value.trim();
+
+                            this.delivery.invoiceDate = moment(
+                              new Date(
+                                this.invoiceForm.controls["invoiceDate"].value
+                              )
+                            ).format("DD/MM/YYYY");
+                            console.log(
+                              "this.delivery.invoiceDate " +
+                                this.delivery.invoiceDate
+                            );
                             // this.delivery.referenceNumber = ""
                             // this.delivery.grnnumber = ""
-                            this.delivery.rateperquantity = this.uniquelineitems[a].RATEPERQTY.replace(/,/g, '');
+                            this.delivery.rateperquantity =
+                              this.uniquelineitems[a].RATEPERQTY.replace(
+                                /,/g,
+                                ""
+                              );
                             if (this.tobeinvoiced == false) {
-                              this.delivery.lineItemNumber = this.uniquelineitems[a].LINEITEMNUMBER;
-                              this.delivery.lineitemtext = this.uniquelineitems[a].LINEITEMTEXT;
+                              this.delivery.lineItemNumber =
+                                this.uniquelineitems[a].LINEITEMNUMBER;
+                              this.delivery.lineitemtext =
+                                this.uniquelineitems[a].LINEITEMTEXT;
+                            } else {
+                              this.delivery.lineItemNumber =
+                                this.uniquelineitems[a].TOINVOICELINEITEMNUMBER;
+                              this.delivery.lineitemtext =
+                                this.uniquelineitems[a].TOINVOICELINEITEMTEXT;
                             }
-                            else {
-                              this.delivery.lineItemNumber = this.uniquelineitems[a].TOINVOICELINEITEMNUMBER;
-                              this.delivery.lineitemtext = this.uniquelineitems[a].TOINVOICELINEITEMTEXT;
-                            }
-      
-                            this.delivery.orderNumber = this.orderlineitems[b].DC;
-                            if (this.TypeNo == 'resubmit') {
-                              this.delivery.beforesubmissioninvoicenumber = this.invNo;
-                              this.delivery.businessPartnerText = this.invoicedata[0].BUSSINESSPARTNERTEXT;
-                              this.delivery.contactPerson = this.invoicedata[0].REQUSITIONER;
+
+                            this.delivery.orderNumber =
+                              this.orderlineitems[b].DC;
+                            if (this.TypeNo == "resubmit") {
+                              this.delivery.beforesubmissioninvoicenumber =
+                                this.invNo;
+                              this.delivery.businessPartnerText =
+                                this.invoicedata[0].BUSSINESSPARTNERTEXT;
+                              this.delivery.contactPerson =
+                                this.invoicedata[0].REQUSITIONER;
                               this.delivery.buyerid = this.invoicedata[0].BUYER;
-      
-                              console.log("Hello========>", this.invoicedata[0].BUSSINESSPARTNERTEXT, this.invoicedata[0].REQUSITIONER,
+
+                              console.log(
+                                "Hello========>",
+                                this.invoicedata[0].BUSSINESSPARTNERTEXT,
+                                this.invoicedata[0].REQUSITIONER,
                                 this.invoicedata[0].BUYER
                               );
-      
                             } else {
                               this.delivery.beforesubmissioninvoicenumber = "";
-                              this.delivery.businessPartnerText = sessionStorage.getItem("Bussinesspartnertext");
-                              this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
-                              this.delivery.buyerid = sessionStorage.getItem("Buyer");
+                              this.delivery.businessPartnerText =
+                                sessionStorage.getItem("Bussinesspartnertext");
+                              this.delivery.contactPerson =
+                                sessionStorage.getItem("Requisitioner");
+                              this.delivery.buyerid =
+                                sessionStorage.getItem("Buyer");
                             }
                             // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
-                            console.log(this.delivery.orderNumber, 'this.delivery.orderNumber')
+                            console.log(
+                              this.delivery.orderNumber,
+                              "this.delivery.orderNumber"
+                            );
                             // this.delivery.quantity = quantity;
-                            this.delivery.quantity = this.orderlineitems[b].QUANTITY;
-                            console.log(this.delivery.orderNumber, ' this.delivery.orderNumber')
-                            console.log(this.delivery.quantity, ' this.delivery.quantity')
-                            this.delivery.uOM = this.uniquelineitems[a].UNITOFMEASURE;
-      
-                            this.delivery.contactPersonPhone = this.uniquelineitems[a].CONTACTPERSONPHONE;
+                            this.delivery.quantity =
+                              this.orderlineitems[b].QUANTITY;
+                            console.log(
+                              this.delivery.orderNumber,
+                              " this.delivery.orderNumber"
+                            );
+                            console.log(
+                              this.delivery.quantity,
+                              " this.delivery.quantity"
+                            );
+                            this.delivery.uOM =
+                              this.uniquelineitems[a].UNITOFMEASURE;
+
+                            this.delivery.contactPersonPhone =
+                              this.uniquelineitems[a].CONTACTPERSONPHONE;
                             // this.delivery.vendorID = this.uniquelineitems[a].vendorId;
-                            this.delivery.vendorID = this.vendorid
-                            this.delivery.company = this.uniquelineitems[a].COMPANY
-                            this.delivery.plant = this.uniquelineitems[a].PLANT
-                            this.delivery.department = this.uniquelineitems[a].DEPARTMENT
-                            this.delivery.storagelocation = this.uniquelineitems[a].STORAGELOCATION
-                            this.delivery.costCentre = this.uniquelineitems[a].COSTCENTRE
-                            this.delivery.category = this.uniquelineitems[a].CATEGORY
-      
-      
-                            this.delivery.profileID = ""
-                            this.delivery.invoiceDocumentPath = ""
-                            this.delivery.iGSTAmount = ""
-                            this.delivery.cGSTAmount = ""
-                            this.delivery.sgstAmount = ""
-                            this.delivery.servicenumber = this.uniquelineitems[a].SERVICENUMBER;
+                            this.delivery.vendorID = this.vendorid;
+                            this.delivery.company =
+                              this.uniquelineitems[a].COMPANY;
+                            this.delivery.plant = this.uniquelineitems[a].PLANT;
+                            this.delivery.department =
+                              this.uniquelineitems[a].DEPARTMENT;
+                            this.delivery.storagelocation =
+                              this.uniquelineitems[a].STORAGELOCATION;
+                            this.delivery.costCentre =
+                              this.uniquelineitems[a].COSTCENTRE;
+                            this.delivery.category =
+                              this.uniquelineitems[a].CATEGORY;
+
+                            this.delivery.profileID = "";
+                            this.delivery.invoiceDocumentPath = "";
+                            this.delivery.iGSTAmount = "";
+                            this.delivery.cGSTAmount = "";
+                            this.delivery.sgstAmount = "";
+                            this.delivery.servicenumber =
+                              this.uniquelineitems[a].SERVICENUMBER;
                             // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
-                            console.log("============>", this.grntobeinvoicelist);
-      
+                            console.log(
+                              "============>",
+                              this.grntobeinvoicelist
+                            );
+
                             if (this.tobeinvoiced == false) {
                               this.delivery.grnnumber = "-";
                               this.delivery.uniquereferencenumber = "-";
                               this.delivery.saplineitemnumber = "-";
                               this.delivery.srcnnumber = "-";
-                            }
-                            else {
-                              this.delivery.servicenumber = this.uniquelineitems[a].SERVICENUMBER;
-                              this.delivery.dcnumber = this.uniquelineitems[a].DCNUMBER
-                              console.log(" this.delivery.dcnumber======>", this.delivery.dcnumber);
+                            } else {
+                              this.delivery.servicenumber =
+                                this.uniquelineitems[a].SERVICENUMBER;
+                              this.delivery.dcnumber =
+                                this.uniquelineitems[a].DCNUMBER;
+                              console.log(
+                                " this.delivery.dcnumber======>",
+                                this.delivery.dcnumber
+                              );
                               if (this.uniquelineitems[a].SRCNUMBER != null) {
-                                this.delivery.srcnnumber = this.uniquelineitems[a].SRCNUMBER;
-                              }
-                              else {
+                                this.delivery.srcnnumber =
+                                  this.uniquelineitems[a].SRCNUMBER;
+                              } else {
                                 this.delivery.srcnnumber = "-";
                               }
-      
-                              this.delivery.grnnumber = this.uniquelineitems[a].GRNMAPPNUMBER;
-                              this.delivery.uniquereferencenumber = this.uniquelineitems[a].SAPUNIQUEREFERENCENO;
-                              this.delivery.saplineitemnumber = this.uniquelineitems[a].SAPLINEITEMNO;
+
+                              this.delivery.grnnumber =
+                                this.uniquelineitems[a].GRNMAPPNUMBER;
+                              this.delivery.uniquereferencenumber =
+                                this.uniquelineitems[a].SAPUNIQUEREFERENCENO;
+                              this.delivery.saplineitemnumber =
+                                this.uniquelineitems[a].SAPLINEITEMNO;
                             }
-      
+
                             // this.delivery.totalAmount = itemAmount;
-                            this.delivery.totalAmount = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '');
-                            this.delivery.description = this.invoiceForm.controls['description'].value;
-                            this.delivery.remark = this.invoiceForm.controls['remarks'].value;
-                            this.delivery.totalamtinctaxes = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '')
-                            this.delivery.taxamount = (this.invoiceForm.controls['taxAmount'].value).toString().replace(/,/g, '')
-                            this.delivery.status = "P"
-      
-      
+                            this.delivery.totalAmount =
+                              this.invoiceForm.controls[
+                                "TotalinctaxAmount"
+                              ].value
+                                .toString()
+                                .replace(/,/g, "");
+                            this.delivery.description =
+                              this.invoiceForm.controls["description"].value;
+                            this.delivery.remark =
+                              this.invoiceForm.controls["remarks"].value;
+                            this.delivery.totalamtinctaxes =
+                              this.invoiceForm.controls[
+                                "TotalinctaxAmount"
+                              ].value
+                                .toString()
+                                .replace(/,/g, "");
+                            this.delivery.taxamount = this.invoiceForm.controls[
+                              "taxAmount"
+                            ].value
+                              .toString()
+                              .replace(/,/g, "");
+                            this.delivery.status = "P";
+
                             if (this.invoicefilechanged == false) {
-      
-                              if (this.TypeNo == 'resubmit') {
-                                this.delivery.actualfilename = this.actualresubmitfilename;
-                                this.delivery.savedfilename = this.savedresubmitfilename;
+                              if (this.TypeNo == "resubmit") {
+                                this.delivery.actualfilename =
+                                  this.actualresubmitfilename;
+                                this.delivery.savedfilename =
+                                  this.savedresubmitfilename;
+                              } else {
+                                this.delivery.actualfilename =
+                                  this.actualfilenameofwopo;
+                                this.delivery.savedfilename =
+                                  this.savedfilenameofwopo;
                               }
-                              else {
-                                this.delivery.actualfilename = this.actualfilenameofwopo;
-                                this.delivery.savedfilename = this.savedfilenameofwopo;
-                              }
-      
-                            }
-                            else {
-                              this.delivery.actualfilename = this.actualfilename;
+                            } else {
+                              this.delivery.actualfilename =
+                                this.actualfilename;
                               this.delivery.savedfilename = this.savedfilename;
                             }
-      
-                            this.delivery.material = this.uniquelineitems[a].MATERIAL;
-                            this.delivery.createdby = sessionStorage.getItem("loginUser");
-                            this.delivery.managerid = "sachin.kale@timesgroup.com";
-                            if (this.invoiceForm.controls['billofladingdate'].value != null) {
-                              this.delivery.billofladingdate = moment(new Date(this.invoiceForm.controls['billofladingdate'].value)).format("DD/MM/YYYY");
-      
-                            }
-                            else {
+
+                            this.delivery.material =
+                              this.uniquelineitems[a].MATERIAL;
+                            this.delivery.createdby =
+                              sessionStorage.getItem("loginUser");
+                            this.delivery.managerid =
+                              "sachin.kale@timesgroup.com";
+                            if (
+                              this.invoiceForm.controls["billofladingdate"]
+                                .value != null
+                            ) {
+                              this.delivery.billofladingdate = moment(
+                                new Date(
+                                  this.invoiceForm.controls[
+                                    "billofladingdate"
+                                  ].value
+                                )
+                              ).format("DD/MM/YYYY");
+                            } else {
                               this.delivery.billofladingdate = "Invalid date";
                             }
-                            console.log("this.delivery.billofladingdate " + this.delivery.billofladingdate);
+                            console.log(
+                              "this.delivery.billofladingdate " +
+                                this.delivery.billofladingdate
+                            );
                             // return;
                             // this.invoiceForm.controls['billofladingdate'].value;
-      
-                            this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY);
+
+                            this.delivery.balance_qty = Number(
+                              this.uniquelineitems[a].BALANCE_QTY
+                            );
                             console.log("a is here " + a);
-                            console.log("this.uniquelineitems[a].BALANCE_QTY is here " + this.uniquelineitems[a].BALANCE_QTY);
+                            console.log(
+                              "this.uniquelineitems[a].BALANCE_QTY is here " +
+                                this.uniquelineitems[a].BALANCE_QTY
+                            );
                             if (this.grntobeinvoicelist.length == 0) {
-                              if (this.part || this.TypeNo == 'resubmit') {
-                                this.delivery.invoiceamount = this.invoiceForm.controls['calRealtime' + a].value;
+                              if (this.part || this.TypeNo == "resubmit") {
+                                this.delivery.invoiceamount =
+                                  this.invoiceForm.controls[
+                                    "calRealtime" + a
+                                  ].value;
+                              } else if (this.full) {
+                                this.delivery.invoiceamount =
+                                  this.uniquelineitems[a].INVAMOUNT;
                               }
-                              else if (this.full) {
-                                this.delivery.invoiceamount = this.uniquelineitems[a].INVAMOUNT;
-                              }
+                            } else {
+                              this.delivery.invoiceamount =
+                                this.uniquelineitems[a].INVAMOUNT;
                             }
-                            else {
-                              this.delivery.invoiceamount = this.uniquelineitems[a].INVAMOUNT;
-      
-                            }
-      
+
                             this.delivery.multiplesavedfilename = "";
                             this.delivery.multipleactualfilename = "";
-      
+
                             if (this.multiplefilechanged == true) {
-                              for (var c = 0; c < this.ArrayOfSelectedFilename.length; c++) {
-                                this.delivery.multipleactualfilename = this.delivery.multipleactualfilename + this.ArrayOfSelectedFilename[c] + ",";
+                              for (
+                                var c = 0;
+                                c < this.ArrayOfSelectedFilename.length;
+                                c++
+                              ) {
+                                this.delivery.multipleactualfilename =
+                                  this.delivery.multipleactualfilename +
+                                  this.ArrayOfSelectedFilename[c] +
+                                  ",";
                               }
-                              for (var x = 0; x < this.ArrayOfSelectedSavedFile.length; x++) {
-                                this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename + this.ArrayOfSelectedSavedFile[x] + ",";
+                              for (
+                                var x = 0;
+                                x < this.ArrayOfSelectedSavedFile.length;
+                                x++
+                              ) {
+                                this.delivery.multiplesavedfilename =
+                                  this.delivery.multiplesavedfilename +
+                                  this.ArrayOfSelectedSavedFile[x] +
+                                  ",";
                               }
-                              this.delivery.multipleactualfilename = this.delivery.multipleactualfilename.slice(0, -1);
-                              this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename.slice(0, -1);
-                              console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
-                              console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
-      
-                            }
-                            else {
+                              this.delivery.multipleactualfilename =
+                                this.delivery.multipleactualfilename.slice(
+                                  0,
+                                  -1
+                                );
+                              this.delivery.multiplesavedfilename =
+                                this.delivery.multiplesavedfilename.slice(
+                                  0,
+                                  -1
+                                );
+                              console.log(
+                                "this.delivery.multipleactualfilename ",
+                                this.delivery.multipleactualfilename
+                              );
+                              console.log(
+                                "this.delivery.multiplesavedfilename ",
+                                this.delivery.multiplesavedfilename
+                              );
+                            } else {
                               if (sessionStorage.getItem("invwopodetails")) {
-                                this.delivery.multipleactualfilename = this.withoutpodetails[0].SUPPORTACTFILENAME;
-                                this.delivery.multiplesavedfilename = this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
-      
-                              }
-                              else if (this.TypeNo == 'resubmit') {
-                                this.delivery.multipleactualfilename = this.invoicedata[0].MULTIACTUALFILENAME;
-                                this.delivery.multiplesavedfilename = this.invoicedata[0].MULTISAVEDFILENAME;
-                              }
-                              else {
+                                this.delivery.multipleactualfilename =
+                                  this.withoutpodetails[0].SUPPORTACTFILENAME;
+                                this.delivery.multiplesavedfilename =
+                                  this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
+                              } else if (this.TypeNo == "resubmit") {
+                                this.delivery.multipleactualfilename =
+                                  this.invoicedata[0].MULTIACTUALFILENAME;
+                                this.delivery.multiplesavedfilename =
+                                  this.invoicedata[0].MULTISAVEDFILENAME;
+                              }else if(this.TypeNo="reopen"){
+                                this.delivery.multipleactualfilename =
+                                  this.invoicedata[0].MULTIACTUALFILENAME;
+                                this.delivery.multiplesavedfilename =
+                                  this.invoicedata[0].MULTISAVEDFILENAME;
+                              } else {
                                 this.delivery.multipleactualfilename = "";
                                 this.delivery.multiplesavedfilename = "";
                               }
-      
                             }
-                            console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
-                            console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
-      
+                            console.log(
+                              "this.delivery.multipleactualfilename ",
+                              this.delivery.multipleactualfilename
+                            );
+                            console.log(
+                              "this.delivery.multiplesavedfilename ",
+                              this.delivery.multiplesavedfilename
+                            );
+
                             // this.delivery.multipleactualfilename=null;
                             // this.delivery.multiplesavedfilename=null;
                             // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
@@ -1245,25 +2537,31 @@ export class InvoiceSubmissionComponent implements OnInit {
                             //   }
                             // }
                             // delivery.buyerid = "sachin.mehta@timesgroup.com"
-      
-                            this.delivery.stage = "1"
-                            console.log("this.delivery ==>", this.delivery.balance_qty);
+
+                            this.delivery.stage = "1";
+                            console.log(
+                              "this.delivery ==>",
+                              this.delivery.balance_qty
+                            );
                             this.invoicesubmissionarray.push(this.delivery);
-                            console.log("this.invoicesubmissionarray ==>", this.invoicesubmissionarray);
+                            console.log(
+                              "this.invoicesubmissionarray ==>",
+                              this.invoicesubmissionarray
+                            );
                           }
-      
                         }
-                      }
-                      else {
+                      } else {
                         console.log("in else" + count);
-      
-                        if (this.uniquelineitems[a].TOINVOICELINEITEMNUMBER == this.orderlineitems[b].LINEITEMNUMBER
-                          && this.uniquelineitems[a].order == this.orderlineitems[b].DC) {
-      
-      
-                          console.log("count is here " + count)
-                          var quantity = this.orderlineitems[b].QUANTITY
-                          var itemAmount = this.orderlineitems[b].AMOUNT
+
+                        if (
+                          this.uniquelineitems[a].TOINVOICELINEITEMNUMBER ==
+                            this.orderlineitems[b].LINEITEMNUMBER &&
+                          this.uniquelineitems[a].order ==
+                            this.orderlineitems[b].DC
+                        ) {
+                          console.log("count is here " + count);
+                          var quantity = this.orderlineitems[b].QUANTITY;
+                          var itemAmount = this.orderlineitems[b].AMOUNT;
                           console.log("quantity " + quantity);
                           // if (quantity > 0) {
                           this.delivery = new Delivery();
@@ -1271,72 +2569,126 @@ export class InvoiceSubmissionComponent implements OnInit {
                           this.delivery.bid = sessionStorage.getItem("Bid");
                           this.delivery.po_num = this.ponumber;
                           if (this.invoice != true) {
-                            console.log("this.invoiceForm.controls['irnNo'].value;", this.invoiceForm.controls['irnNo'].value)
-                            this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
-                            console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
-      
-                            this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-      
-                          }
-                          else {
+                            console.log(
+                              "this.invoiceForm.controls['irnNo'].value;",
+                              this.invoiceForm.controls["irnNo"].value
+                            );
+                            this.delivery.irnNumber =
+                              this.invoiceForm.controls["irnNo"].value;
+                            console.log(
+                              "test date===========>",
+                              this.invoiceForm.controls["irnDate"].value
+                            );
+
+                            this.delivery.irnDate = moment(
+                              new Date(
+                                this.invoiceForm.controls["irnDate"].value
+                              )
+                            ).format("DD/MM/YYYY");
+                          } else {
                             this.delivery.irnNumber = "";
-                            if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+                            if (
+                              this.invoiceForm.controls["irnDate"].value ==
+                                null ||
+                              this.invoiceForm.controls["irnDate"].value == ""
+                            ) {
                               this.delivery.irnDate = null;
                             }
                           }
                           // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
                           // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-                          this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
-      
-                          this.delivery.invoiceDate = moment(new Date(this.invoiceForm.controls['invoiceDate'].value)).format("DD/MM/YYYY");
-                          console.log("this.delivery.invoiceDate " + this.delivery.invoiceDate);
+                          this.delivery.invoiceNumber =
+                            this.invoiceForm.controls["invoiceNo"].value.trim();
+
+                          this.delivery.invoiceDate = moment(
+                            new Date(
+                              this.invoiceForm.controls["invoiceDate"].value
+                            )
+                          ).format("DD/MM/YYYY");
+                          console.log(
+                            "this.delivery.invoiceDate " +
+                              this.delivery.invoiceDate
+                          );
                           // this.delivery.referenceNumber = ""
                           // this.delivery.grnnumber = ""
-                          this.delivery.rateperquantity = this.grnuniquelineitems[a].TOINVOICERATEPERQTY.replace(/,/g, '');
-      
-                          this.delivery.lineItemNumber = this.grnuniquelineitems[a].TOINVOICELINEITEMNUMBER;
-                          this.delivery.lineitemtext = this.grnuniquelineitems[a].TOINVOICELINEITEMTEXT;
+                          this.delivery.rateperquantity =
+                            this.grnuniquelineitems[
+                              a
+                            ].TOINVOICERATEPERQTY.replace(/,/g, "");
+
+                          this.delivery.lineItemNumber =
+                            this.grnuniquelineitems[a].TOINVOICELINEITEMNUMBER;
+                          this.delivery.lineitemtext =
+                            this.grnuniquelineitems[a].TOINVOICELINEITEMTEXT;
                           this.delivery.orderNumber = this.orderlineitems[b].DC;
-                          if (this.TypeNo == 'resubmit') {
-                            this.delivery.beforesubmissioninvoicenumber = this.invNo;
-                            this.delivery.businessPartnerText = this.invoicedata[0].BUSSINESSPARTNERTEXT;
-                            this.delivery.contactPerson = this.invoicedata[0].REQUSITIONER;
+                          if (this.TypeNo == "resubmit") {
+                            this.delivery.beforesubmissioninvoicenumber =
+                              this.invNo;
+                            this.delivery.businessPartnerText =
+                              this.invoicedata[0].BUSSINESSPARTNERTEXT;
+                            this.delivery.contactPerson =
+                              this.invoicedata[0].REQUSITIONER;
                             this.delivery.buyerid = this.invoicedata[0].BUYER;
-      
-                            console.log("Hello========>", this.invoicedata[0].BUSSINESSPARTNERTEXT, this.invoicedata[0].REQUSITIONER,
+
+                            console.log(
+                              "Hello========>",
+                              this.invoicedata[0].BUSSINESSPARTNERTEXT,
+                              this.invoicedata[0].REQUSITIONER,
                               this.invoicedata[0].BUYER
                             );
-      
                           } else {
                             this.delivery.beforesubmissioninvoicenumber = "";
-                            this.delivery.businessPartnerText = sessionStorage.getItem("Bussinesspartnertext");
-                            this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
-                            this.delivery.buyerid = sessionStorage.getItem("Buyer");
+                            this.delivery.businessPartnerText =
+                              sessionStorage.getItem("Bussinesspartnertext");
+                            this.delivery.contactPerson =
+                              sessionStorage.getItem("Requisitioner");
+                            this.delivery.buyerid =
+                              sessionStorage.getItem("Buyer");
                           }
                           // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
-                          console.log(this.delivery.orderNumber, 'this.delivery.orderNumber')
+                          console.log(
+                            this.delivery.orderNumber,
+                            "this.delivery.orderNumber"
+                          );
                           // this.delivery.quantity = quantity;
-                          this.delivery.quantity = this.orderlineitems[b].QUANTITY;
-                          console.log(this.delivery.orderNumber, ' this.delivery.orderNumber')
-                          console.log(this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE, ' this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE')
-                          this.delivery.uOM = this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE;
-                          this.delivery.contactPersonPhone = this.grnuniquelineitems[a].TOINVOICECONTACTPERSONPHONE;
-                          this.delivery.company = this.grnuniquelineitems[a].TOINVOICECOMPANY
-                          this.delivery.plant = this.grnuniquelineitems[a].TOINVOICEPLANT
-                          this.delivery.department = this.grnuniquelineitems[a].TOINVOICEDEPARTMENT
-                          this.delivery.storagelocation = this.grnuniquelineitems[a].TOINVOICESTORAGELOCATION
-                          this.delivery.costCentre = this.grnuniquelineitems[a].TOINVOICECOSTCENTRE
-                          this.delivery.category = this.grnuniquelineitems[a].TOINVOICECATEGORY
-      
-                          this.delivery.vendorID = this.vendorid
-                          this.delivery.profileID = ""
-                          this.delivery.invoiceDocumentPath = ""
-                          this.delivery.iGSTAmount = ""
-                          this.delivery.cGSTAmount = ""
-                          this.delivery.sgstAmount = ""
+                          this.delivery.quantity =
+                            this.orderlineitems[b].QUANTITY;
+                          console.log(
+                            this.delivery.orderNumber,
+                            " this.delivery.orderNumber"
+                          );
+                          console.log(
+                            this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE,
+                            " this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE"
+                          );
+                          this.delivery.uOM =
+                            this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE;
+                          this.delivery.contactPersonPhone =
+                            this.grnuniquelineitems[
+                              a
+                            ].TOINVOICECONTACTPERSONPHONE;
+                          this.delivery.company =
+                            this.grnuniquelineitems[a].TOINVOICECOMPANY;
+                          this.delivery.plant =
+                            this.grnuniquelineitems[a].TOINVOICEPLANT;
+                          this.delivery.department =
+                            this.grnuniquelineitems[a].TOINVOICEDEPARTMENT;
+                          this.delivery.storagelocation =
+                            this.grnuniquelineitems[a].TOINVOICESTORAGELOCATION;
+                          this.delivery.costCentre =
+                            this.grnuniquelineitems[a].TOINVOICECOSTCENTRE;
+                          this.delivery.category =
+                            this.grnuniquelineitems[a].TOINVOICECATEGORY;
+
+                          this.delivery.vendorID = this.vendorid;
+                          this.delivery.profileID = "";
+                          this.delivery.invoiceDocumentPath = "";
+                          this.delivery.iGSTAmount = "";
+                          this.delivery.cGSTAmount = "";
+                          this.delivery.sgstAmount = "";
                           // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
                           console.log("============>", this.grntobeinvoicelist);
-      
+
                           // if (this.tobeinvoiced == false) {
                           //   this.delivery.grnnumber = "-";
                           //   this.delivery.uniquereferencenumber = "-";
@@ -1344,100 +2696,166 @@ export class InvoiceSubmissionComponent implements OnInit {
                           //   this.delivery.srcnnumber = "-";
                           // }
                           // else {
-                          this.delivery.servicenumber = this.grnuniquelineitems[a].SERVICENUMBER;
-                          this.delivery.dcnumber = this.grnuniquelineitems[a].DCNUMBER
-                          console.log(" this.delivery.dcnumber======>", this.delivery.dcnumber);
+                          this.delivery.servicenumber =
+                            this.grnuniquelineitems[a].SERVICENUMBER;
+                          this.delivery.dcnumber =
+                            this.grnuniquelineitems[a].DCNUMBER;
+                          console.log(
+                            " this.delivery.dcnumber======>",
+                            this.delivery.dcnumber
+                          );
                           if (this.grnuniquelineitems[a].SRCNUMBER != null) {
-                            this.delivery.srcnnumber = this.grnuniquelineitems[a].SRCNUMBER;
-                          }
-                          else {
+                            this.delivery.srcnnumber =
+                              this.grnuniquelineitems[a].SRCNUMBER;
+                          } else {
                             this.delivery.srcnnumber = "-";
                           }
-      
-                          this.delivery.grnnumber = this.grnuniquelineitems[a].GRNMAPPNUMBER;
-                          this.delivery.uniquereferencenumber = this.grnuniquelineitems[a].SAPUNIQUEREFERENCENO;
-                          this.delivery.saplineitemnumber = this.grnuniquelineitems[a].SAPLINEITEMNO;
+
+                          this.delivery.grnnumber =
+                            this.grnuniquelineitems[a].GRNMAPPNUMBER;
+                          this.delivery.uniquereferencenumber =
+                            this.grnuniquelineitems[a].SAPUNIQUEREFERENCENO;
+                          this.delivery.saplineitemnumber =
+                            this.grnuniquelineitems[a].SAPLINEITEMNO;
                           // }
-      
+
                           // this.delivery.totalAmount = itemAmount;
-                          this.delivery.totalAmount = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '');
-                          this.delivery.description = this.invoiceForm.controls['description'].value;
-                          this.delivery.remark = this.invoiceForm.controls['remarks'].value;
-                          this.delivery.totalamtinctaxes = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '')
-                          this.delivery.taxamount = (this.invoiceForm.controls['taxAmount'].value).toString().replace(/,/g, '')
-                          this.delivery.status = "P"
-      
-      
+                          this.delivery.totalAmount = this.invoiceForm.controls[
+                            "TotalinctaxAmount"
+                          ].value
+                            .toString()
+                            .replace(/,/g, "");
+                          this.delivery.description =
+                            this.invoiceForm.controls["description"].value;
+                          this.delivery.remark =
+                            this.invoiceForm.controls["remarks"].value;
+                          this.delivery.totalamtinctaxes =
+                            this.invoiceForm.controls["TotalinctaxAmount"].value
+                              .toString()
+                              .replace(/,/g, "");
+                          this.delivery.taxamount = this.invoiceForm.controls[
+                            "taxAmount"
+                          ].value
+                            .toString()
+                            .replace(/,/g, "");
+                          this.delivery.status = "P";
+
                           if (this.invoicefilechanged == false) {
-      
-                            if (this.TypeNo == 'resubmit') {
-                              this.delivery.actualfilename = this.actualresubmitfilename;
-                              this.delivery.savedfilename = this.savedresubmitfilename;
+                            if (this.TypeNo == "resubmit") {
+                              this.delivery.actualfilename =
+                                this.actualresubmitfilename;
+                              this.delivery.savedfilename =
+                                this.savedresubmitfilename;
+                            } else {
+                              this.delivery.actualfilename =
+                                this.actualfilenameofwopo;
+                              this.delivery.savedfilename =
+                                this.savedfilenameofwopo;
                             }
-                            else {
-                              this.delivery.actualfilename = this.actualfilenameofwopo;
-                              this.delivery.savedfilename = this.savedfilenameofwopo;
-                            }
-      
-                          }
-                          else {
+                          } else {
                             this.delivery.actualfilename = this.actualfilename;
-                           
                             this.delivery.savedfilename = this.savedfilename;
                           }
-                          this.delivery.material = this.grnuniquelineitems[a].TOINVOICEMATERIAL;
-                          this.delivery.createdby = sessionStorage.getItem("loginUser");
-                          this.delivery.managerid = "sachin.kale@timesgroup.com";
-                          if (this.invoiceForm.controls['billofladingdate'].value != null) {
-                            this.delivery.billofladingdate = moment(new Date(this.invoiceForm.controls['billofladingdate'].value)).format("DD/MM/YYYY");
-      
-                          }
-                          else {
+
+                          this.delivery.material =
+                            this.grnuniquelineitems[a].TOINVOICEMATERIAL;
+                          this.delivery.createdby =
+                            sessionStorage.getItem("loginUser");
+                          this.delivery.managerid =
+                            "sachin.kale@timesgroup.com";
+                          if (
+                            this.invoiceForm.controls["billofladingdate"]
+                              .value != null
+                          ) {
+                            this.delivery.billofladingdate = moment(
+                              new Date(
+                                this.invoiceForm.controls[
+                                  "billofladingdate"
+                                ].value
+                              )
+                            ).format("DD/MM/YYYY");
+                          } else {
                             this.delivery.billofladingdate = "Invalid date";
                           }
-                          console.log("this.delivery.billofladingdate " + this.delivery.billofladingdate);
+                          console.log(
+                            "this.delivery.billofladingdate " +
+                              this.delivery.billofladingdate
+                          );
                           // return;
                           // this.invoiceForm.controls['billofladingdate'].value;
-      
-                          this.delivery.balance_qty = Number(this.grnuniquelineitems[a].BALANCE_QTY);
-                          this.delivery.invoiceamount = this.grnuniquelineitems[a].TOINVOICETOTALAMOUNT;
-      
-      
+
+                          this.delivery.balance_qty = Number(
+                            this.grnuniquelineitems[a].BALANCE_QTY
+                          );
+                          this.delivery.invoiceamount =
+                            this.grnuniquelineitems[a].TOINVOICETOTALAMOUNT;
+
                           this.delivery.multiplesavedfilename = "";
                           this.delivery.multipleactualfilename = "";
-      
+
                           if (this.multiplefilechanged == true) {
-                            for (var c = 0; c < this.ArrayOfSelectedFilename.length; c++) {
-                              this.delivery.multipleactualfilename = this.delivery.multipleactualfilename + this.ArrayOfSelectedFilename[c] + ",";
+                            for (
+                              var c = 0;
+                              c < this.ArrayOfSelectedFilename.length;
+                              c++
+                            ) {
+                              this.delivery.multipleactualfilename =
+                                this.delivery.multipleactualfilename +
+                                this.ArrayOfSelectedFilename[c] +
+                                ",";
                             }
-                            for (var x = 0; x < this.ArrayOfSelectedSavedFile.length; x++) {
-                              this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename + this.ArrayOfSelectedSavedFile[x] + ",";
+                            for (
+                              var x = 0;
+                              x < this.ArrayOfSelectedSavedFile.length;
+                              x++
+                            ) {
+                              this.delivery.multiplesavedfilename =
+                                this.delivery.multiplesavedfilename +
+                                this.ArrayOfSelectedSavedFile[x] +
+                                ",";
                             }
-                            this.delivery.multipleactualfilename = this.delivery.multipleactualfilename.slice(0, -1);
-                            this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename.slice(0, -1);
-                            console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
-                            console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
-      
-                          }
-                          else {
+                            this.delivery.multipleactualfilename =
+                              this.delivery.multipleactualfilename.slice(0, -1);
+                            this.delivery.multiplesavedfilename =
+                              this.delivery.multiplesavedfilename.slice(0, -1);
+                            console.log(
+                              "this.delivery.multipleactualfilename ",
+                              this.delivery.multipleactualfilename
+                            );
+                            console.log(
+                              "this.delivery.multiplesavedfilename ",
+                              this.delivery.multiplesavedfilename
+                            );
+                          } else {
                             if (sessionStorage.getItem("invwopodetails")) {
-                              this.delivery.multipleactualfilename = this.withoutpodetails[0].SUPPORTACTFILENAME;
-                              this.delivery.multiplesavedfilename = this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
-      
-                            }
-                            else if (this.TypeNo == 'resubmit') {
-                              this.delivery.multipleactualfilename = this.invoicedata[0].MULTIACTUALFILENAME;
-                              this.delivery.multiplesavedfilename = this.invoicedata[0].MULTISAVEDFILENAME;
-                            }
-                            else {
+                              this.delivery.multipleactualfilename =
+                                this.withoutpodetails[0].SUPPORTACTFILENAME;
+                              this.delivery.multiplesavedfilename =
+                                this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
+                            } else if (this.TypeNo == "resubmit") {
+                              this.delivery.multipleactualfilename =
+                                this.invoicedata[0].MULTIACTUALFILENAME;
+                              this.delivery.multiplesavedfilename =
+                                this.invoicedata[0].MULTISAVEDFILENAME;
+                            } else if (this.TypeNo == "reopen") {
+                              this.delivery.multipleactualfilename =
+                                this.invoicedata[0].MULTIACTUALFILENAME;
+                              this.delivery.multiplesavedfilename =
+                                this.invoicedata[0].MULTISAVEDFILENAME;
+                            }else {
                               this.delivery.multipleactualfilename = "";
                               this.delivery.multiplesavedfilename = "";
                             }
-      
                           }
-                          console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
-                          console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
-      
+                          console.log(
+                            "this.delivery.multipleactualfilename ",
+                            this.delivery.multipleactualfilename
+                          );
+                          console.log(
+                            "this.delivery.multiplesavedfilename ",
+                            this.delivery.multiplesavedfilename
+                          );
+
                           // this.delivery.multipleactualfilename=null;
                           // this.delivery.multiplesavedfilename=null;
                           // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
@@ -1450,714 +2868,115 @@ export class InvoiceSubmissionComponent implements OnInit {
                           //   }
                           // }
                           // delivery.buyerid = "sachin.mehta@timesgroup.com"
-      
-                          this.delivery.stage = "1"
-                          console.log("this.delivery ==>", this.delivery.balance_qty);
+
+                          this.delivery.stage = "1";
+                          console.log(
+                            "this.delivery ==>",
+                            this.delivery.balance_qty
+                          );
                           this.invoicesubmissionarray.push(this.delivery);
-                          console.log("this.invoicesubmissionarray ==>", this.invoicesubmissionarray);
+                          console.log(
+                            "this.invoicesubmissionarray ==>",
+                            this.invoicesubmissionarray
+                          );
                           // }
-      
                         }
                         count++;
                       }
-      
-      
-      
-      
-      
                     }
-      
                   }
-      
+
                   // this.loaderservice.hide()
                   // return false
                   // this.delivery.actualfilename = null
-                  this.purchaseOrderListService.sendEmaildemo(this.invoicesubmissionarray).subscribe(res => {
-                    sessionStorage.removeItem("invwopodetails");
-                    if (res[0].message == "Success") {
-      
-                      this.purchaseOrderListService.removeEmptyDeliveries(this.ponumber, this.nullDCN).subscribe(res => {
-                        if (res[0].message == "Success") {
-      
-      
-      
-                          this.loaderservice.hide();
-                          // this.dialogBox.popUpOpen2('Invoice has been submitted successfully', 'success', 'invoicesubmit');
-                          const dialogConfig = new MatDialogConfig();
-                          dialogConfig.data = {
-                            message: 'Invoice has been submitted successfully',
-                            condition: 'success',
-                            page: 'invoicesubmit'
-                          };
-                          const mydata = dialogConfig.data;
-                          console.log("PopupComponent", mydata);
-      
-                          const dialogRef = this.dialog.open(PopupComponent, {
-                            panelClass: 'custom-modalbox',
-      
-                            width: '400px',
-                            data: { datakey: dialogConfig.data }
-      
+                  this.purchaseOrderListService
+                    .sendEmaildemo(this.invoicesubmissionarray)
+                    .subscribe((res) => {
+                      sessionStorage.removeItem("invwopodetails");
+                      if (res[0].message == "Success") {
+                        this.purchaseOrderListService
+                          .removeEmptyDeliveries(this.ponumber, this.nullDCN)
+                          .subscribe((res) => {
+                            if (res[0].message == "Success") {
+                              // this.loaderservice.hide();
+                              // this.dialogBox.popUpOpen2('Invoice has been submitted successfully', 'success', 'invoicesubmit');
+                              const dialogConfig = new MatDialogConfig();
+                              dialogConfig.data = {
+                                message:
+                                  "Invoice has been submitted successfully",
+                                condition: "success",
+                                page: "invoicesubmit",
+                              };
+                              const mydata = dialogConfig.data;
+                              console.log("PopupComponent", mydata);
+
+                              const dialogRef = this.dialog.open(
+                                PopupComponent,
+                                {
+                                  panelClass: "custom-modalbox",
+
+                                  width: "400px",
+                                  data: { datakey: dialogConfig.data },
+                                }
+                              );
+                              dialogRef.afterClosed().subscribe((result) => {
+                                console.log(`Dialog result1: ${result}`);
+                                this.router.navigate(["/trackInvoiceList"]);
+                              });
+                            }
                           });
-                          dialogRef.afterClosed().subscribe(result => {
-                            console.log(`Dialog result1: ${result}`);
-                            this.router.navigate(['/trackInvoiceList']);
-                          });
-                        }
-                      });
-                      // sessionStorage.removeItem("invAllDetails");
-                      // sessionStorage.removeItem("invsubmissionorderDetails");
-                      // sessionStorage.removeItem("invsubmissionDetails");
-                      // this.dialogBox.popUpOpen2('Invoice has been submitted successfully','success','invoicesubmit');
-                      // this.toastr.success("Invoice Has Been Submitted Successfully")
-                      console.log("Inin");
-                      this.invoiceForm.reset();
-                      // this.invoiceconfile = null;
-                      this.viewAttachmentName = "";
-                      this.successmessage = "Invoice Has Been Submitted Successfully";
-                      this.success = true;
-                      // this.showPopup();
-                    }
-                    else {
+                        // sessionStorage.removeItem("invAllDetails");
+                        // sessionStorage.removeItem("invsubmissionorderDetails");
+                        // sessionStorage.removeItem("invsubmissionDetails");
+                        // this.dialogBox.popUpOpen2('Invoice has been submitted successfully','success','invoicesubmit');
+                        // this.toastr.success("Invoice Has Been Submitted Successfully")
+                        console.log("Inin");
+                        this.invoiceForm.reset();
+                        // this.invoiceconfile = null;
+                        this.viewAttachmentName = "";
+                        this.successmessage =
+                          "Invoice Has Been Submitted Successfully";
+                        this.success = true;
+                        // this.showPopup();
+                      } else {
+                        this.loaderservice.hide();
+                        // this.dialogBox.popUpOpen2('Invoice Number Already Exist.', 'error', 'invoicesubmit');
+                        const dialogConfig = new MatDialogConfig();
+                        dialogConfig.data = {
+                          message: res[0].Uniquemessage,
+                          // message: 'Invoice Number Already Exist.',
+                          condition: "error",
+                          page: "invoicesubmit",
+                          specific: "note",
+                        };
+                        const mydata = dialogConfig.data;
+                        console.log("PopupComponent", mydata);
+
+                        const dialogRef = this.dialog.open(PopupComponent, {
+                          panelClass: "custom-modalbox",
+
+                          width: "400px",
+                          data: { datakey: dialogConfig.data },
+                        });
+                        dialogRef.afterClosed().subscribe((result) => {
+                          console.log(`Dialog result1: ${result}`);
+                        });
+                        // this.toastr.error(res[0].message)
+                        // this.dialogBox.popUpOpen2('Error while submitting. Please try again','error','invoicesubmit');
+                        this.successmessage = res[0].Uniquemessage;
+                        this.error = true;
+                        // this.showPopup();
+                      }
                       this.loaderservice.hide();
-                      // this.dialogBox.popUpOpen2('Invoice Number Already Exist.', 'error', 'invoicesubmit');
-                      const dialogConfig = new MatDialogConfig();
-                      dialogConfig.data = {
-                        message: res[0].Uniquemessage,
-                        // message: 'Invoice Number Already Exist.',
-                        condition: 'error',
-                        page: 'invoicesubmit',
-                        specific:'note'
-                      };
-                      const mydata = dialogConfig.data;
-                      console.log("PopupComponent", mydata);
-      
-                      const dialogRef = this.dialog.open(PopupComponent, {
-                        panelClass: 'custom-modalbox',
-      
-                        width: '400px',
-                        data: { datakey: dialogConfig.data }
-      
-                      });
-                      dialogRef.afterClosed().subscribe(result => {
-                        console.log(`Dialog result1: ${result}`);
-                      });
-                      // this.toastr.error(res[0].message)
-                      // this.dialogBox.popUpOpen2('Error while submitting. Please try again','error','invoicesubmit');
-                      this.successmessage = res[0].Uniquemessage;
-                      this.error = true;
-                      // this.showPopup();
-                    }
-                    this.loaderservice.hide();
-                  });
+                    });
                   // this.loaderservice.hide();
                   // }
-                })
-                // this.loaderservice.hide();
-                // console.log("autodc===========>",dcnlist);
-              }
-            });
-          }
-        });
-      }
-      else
-      {
-      this.purchaseOrderListService.createcustomdeliveryitems(this.ponumber, this.fullpodate, this.lineitemnumberlist, this.quantitylist).subscribe(res => {
-
-        if (res[0].message == "Success") {
-          
-          this.loaderservice.show();
-          var dcnlist: any = []
-          res[0].dcnvalues.forEach(element => {
-            dcnlist.push(element)
+                });
+              // this.loaderservice.hide();
+              // console.log("autodc===========>",dcnlist);
+            }
           });
-
-          this.purchaseOrderListService.setDCNumbers(this.ponumber, dcnlist).subscribe(res1 => {
-            console.log("return========>", res1[0].message, res1[0].orderitems);
-
-            this.orderlineitems = res1[0].orderitems;
-            // res1[0].orderitems.forEach(data => {
-            //   this.orderlineitems.push(data);
-            // });
-
-            for (let s = 0; s < this.orderlineitems.length; s++) {
-              if (this.orderlineitems[s].QUANTITY == 0 || this.orderlineitems[s].QUANTITY == 0.00) {
-                this.nullDCN.push(this.orderlineitems[s].DC)
-              }
-            }
-            console.log(this.uniquelineitems, 'this.uniquelineitems.length');
-            console.log(this.orderlineitems, 'this.orderlineitems.length');
-            for (var k = 0; k < this.uniquelineitems.length; k++) {
-              this.uniquelineitems[k].order = this.orderlineitems[k].DC;
-            }
-
-            // this.loaderservice.hide();
-
-
-            // this.actualfilename = this.viewUploadFile.name;
-
-            // var fileName = this.getFileNameWOExtention(this.viewUploadFile.name) + "_";
-            // fileName = this.getTimeStampFileName(fileName, this.getExtensionOfFile(this.viewUploadFile.name));
-            // var fileName2 = fileName;
-            // fileName = this.ponumber + "_invoice_" + fileName;
-            // this.savedfilename = fileName;
-            // console.log("FileName here" + fileName);
-            // this.purchaseOrderListService.fileupload(this.viewUploadFile, fileName).subscribe(res => {
-            //   console.log(JSON.stringify(res))
-            //   res[0].data = true;
-            //   if (res.length == 0) {
-            //     this.loaderservice.hide();
-            //     return false;
-            //   }
-            // else if (res[0].status == "Success") {
-
-            // return false
-            console.log("this.uniquelineitems >>", this.uniquelineitems);
-            console.log("this.orderlineitems >>", this.orderlineitems);
-            console.log("this.uniquelineitems.length >>" + this.uniquelineitems.length);
-            console.log("this.orderlineitems.length >>" + this.orderlineitems.length);
-            // return;
-            var count = 0;
-            for (var a = 0; a < this.uniquelineitems.length; a++) {
-              console.log("a is here =>" + a);
-              for (var b = 0; b < this.orderlineitems.length; b++) {
-                // debugger
-                console.log(this.uniquelineitems[a].LINEITEMNUMBER, 'this.uniquelineitems.LINEITEMNUMBER')
-                console.log(this.orderlineitems[b].LINEITEMNUMBER, 'this.orderlineitems.LINEITEMNUMBER')
-                if (this.grntobeinvoicelist.length == 0) {
-                  if (this.uniquelineitems[a].LINEITEMNUMBER == this.orderlineitems[b].LINEITEMNUMBER) {
-
-                    // var quantity = $('#Quantity' + b).val();
-                    // var itemAmount = $('#itemAmount' + b).val();
-                    // debugger;
-                    console.log("this.uniquelineitems[a].LINEITEMNUMBER " + this.uniquelineitems[a].LINEITEMNUMBER +
-                      "BALANCE_QTY " + this.uniquelineitems[a].BALANCE_QTY);
-
-                    var quantity = this.orderlineitems[b].QUANTITY
-                    var itemAmount = this.orderlineitems[b].AMOUNT
-                    console.log("quantity " + quantity);
-                    if (quantity > 0) {
-                      this.delivery = new Delivery();
-                      console.log("a is not empty ==>" + a);
-                      this.delivery.bid = sessionStorage.getItem("Bid");
-                      this.delivery.po_num = this.ponumber;
-                      if (this.invoice != true) {
-                        console.log("this.invoiceForm.controls['irnNo'].value;", this.invoiceForm.controls['irnNo'].value)
-                        this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
-                        console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
-
-                        this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-
-                      }
-                      else {
-                        this.delivery.irnNumber = "";
-                        if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
-                          this.delivery.irnDate = null;
-                        }
-                      }
-                      // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
-                      // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-                      this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
-
-                      this.delivery.invoiceDate = moment(new Date(this.invoiceForm.controls['invoiceDate'].value)).format("DD/MM/YYYY");
-                      console.log("this.delivery.invoiceDate " + this.delivery.invoiceDate);
-                      // this.delivery.referenceNumber = ""
-                      // this.delivery.grnnumber = ""
-                      this.delivery.rateperquantity = this.uniquelineitems[a].RATEPERQTY.replace(/,/g, '');
-                      if (this.tobeinvoiced == false) {
-                        this.delivery.lineItemNumber = this.uniquelineitems[a].LINEITEMNUMBER;
-                        this.delivery.lineitemtext = this.uniquelineitems[a].LINEITEMTEXT;
-                      }
-                      else {
-                        this.delivery.lineItemNumber = this.uniquelineitems[a].TOINVOICELINEITEMNUMBER;
-                        this.delivery.lineitemtext = this.uniquelineitems[a].TOINVOICELINEITEMTEXT;
-                      }
-
-                      this.delivery.orderNumber = this.orderlineitems[b].DC;
-                      if (this.TypeNo == 'resubmit') {
-                        this.delivery.beforesubmissioninvoicenumber = this.invNo;
-                        this.delivery.businessPartnerText = this.invoicedata[0].BUSSINESSPARTNERTEXT;
-                        this.delivery.contactPerson = this.invoicedata[0].REQUSITIONER;
-                        this.delivery.buyerid = this.invoicedata[0].BUYER;
-
-                        console.log("Hello========>", this.invoicedata[0].BUSSINESSPARTNERTEXT, this.invoicedata[0].REQUSITIONER,
-                          this.invoicedata[0].BUYER
-                        );
-
-                      } else {
-                        this.delivery.beforesubmissioninvoicenumber = "";
-                        this.delivery.businessPartnerText = sessionStorage.getItem("Bussinesspartnertext");
-                        this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
-                        this.delivery.buyerid = sessionStorage.getItem("Buyer");
-                      }
-                      // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
-                      console.log(this.delivery.orderNumber, 'this.delivery.orderNumber')
-                      // this.delivery.quantity = quantity;
-                      this.delivery.quantity = this.orderlineitems[b].QUANTITY;
-                      console.log(this.delivery.orderNumber, ' this.delivery.orderNumber')
-                      console.log(this.delivery.quantity, ' this.delivery.quantity')
-                      this.delivery.uOM = this.uniquelineitems[a].UNITOFMEASURE;
-
-                      this.delivery.contactPersonPhone = this.uniquelineitems[a].CONTACTPERSONPHONE;
-                      // this.delivery.vendorID = this.uniquelineitems[a].vendorId;
-                      this.delivery.vendorID = this.vendorid
-                      this.delivery.company = this.uniquelineitems[a].COMPANY
-                      this.delivery.plant = this.uniquelineitems[a].PLANT
-                      this.delivery.department = this.uniquelineitems[a].DEPARTMENT
-                      this.delivery.storagelocation = this.uniquelineitems[a].STORAGELOCATION
-                      this.delivery.costCentre = this.uniquelineitems[a].COSTCENTRE
-                      this.delivery.category = this.uniquelineitems[a].CATEGORY
-
-
-                      this.delivery.profileID = ""
-                      this.delivery.invoiceDocumentPath = ""
-                      this.delivery.iGSTAmount = ""
-                      this.delivery.cGSTAmount = ""
-                      this.delivery.sgstAmount = ""
-                      this.delivery.servicenumber = this.uniquelineitems[a].SERVICENUMBER;
-                      // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
-                      console.log("============>", this.grntobeinvoicelist);
-
-                      if (this.tobeinvoiced == false) {
-                        this.delivery.grnnumber = "-";
-                        this.delivery.uniquereferencenumber = "-";
-                        this.delivery.saplineitemnumber = "-";
-                        this.delivery.srcnnumber = "-";
-                      }
-                      else {
-                        this.delivery.servicenumber = this.uniquelineitems[a].SERVICENUMBER;
-                        this.delivery.dcnumber = this.uniquelineitems[a].DCNUMBER
-                        console.log(" this.delivery.dcnumber======>", this.delivery.dcnumber);
-                        if (this.uniquelineitems[a].SRCNUMBER != null) {
-                          this.delivery.srcnnumber = this.uniquelineitems[a].SRCNUMBER;
-                        }
-                        else {
-                          this.delivery.srcnnumber = "-";
-                        }
-
-                        this.delivery.grnnumber = this.uniquelineitems[a].GRNMAPPNUMBER;
-                        this.delivery.uniquereferencenumber = this.uniquelineitems[a].SAPUNIQUEREFERENCENO;
-                        this.delivery.saplineitemnumber = this.uniquelineitems[a].SAPLINEITEMNO;
-                      }
-
-                      // this.delivery.totalAmount = itemAmount;
-                      this.delivery.totalAmount = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '');
-                      this.delivery.description = this.invoiceForm.controls['description'].value;
-                      this.delivery.remark = this.invoiceForm.controls['remarks'].value;
-                      this.delivery.totalamtinctaxes = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '')
-                      this.delivery.taxamount = (this.invoiceForm.controls['taxAmount'].value).toString().replace(/,/g, '')
-                      this.delivery.status = "P"
-
-
-                      if (this.invoicefilechanged == false) {
-
-                        if (this.TypeNo == 'resubmit') {
-                          this.delivery.actualfilename = this.actualresubmitfilename;
-                          this.delivery.savedfilename = this.savedresubmitfilename;
-                        }
-                        else {
-                          this.delivery.actualfilename = this.actualfilenameofwopo;
-                          this.delivery.savedfilename = this.savedfilenameofwopo;
-                        }
-
-                      }
-                      else {
-                        this.delivery.actualfilename = this.actualfilename;
-                        this.delivery.savedfilename = this.savedfilename;
-                      }
-
-                      this.delivery.material = this.uniquelineitems[a].MATERIAL;
-                      this.delivery.createdby = sessionStorage.getItem("loginUser");
-                      this.delivery.managerid = "sachin.kale@timesgroup.com";
-                      if (this.invoiceForm.controls['billofladingdate'].value != null) {
-                        this.delivery.billofladingdate = moment(new Date(this.invoiceForm.controls['billofladingdate'].value)).format("DD/MM/YYYY");
-
-                      }
-                      else {
-                        this.delivery.billofladingdate = "Invalid date";
-                      }
-                      console.log("this.delivery.billofladingdate " + this.delivery.billofladingdate);
-                      // return;
-                      // this.invoiceForm.controls['billofladingdate'].value;
-
-                      this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY);
-                      console.log("a is here " + a);
-                      console.log("this.uniquelineitems[a].BALANCE_QTY is here " + this.uniquelineitems[a].BALANCE_QTY);
-                      if (this.grntobeinvoicelist.length == 0) {
-                        if (this.part || this.TypeNo == 'resubmit') {
-                          this.delivery.invoiceamount = this.invoiceForm.controls['calRealtime' + a].value;
-                        }
-                        else if (this.full) {
-                          this.delivery.invoiceamount = this.uniquelineitems[a].INVAMOUNT;
-                        }
-                      }
-                      else {
-                        this.delivery.invoiceamount = this.uniquelineitems[a].INVAMOUNT;
-
-                      }
-
-                      this.delivery.multiplesavedfilename = "";
-                      this.delivery.multipleactualfilename = "";
-
-                      if (this.multiplefilechanged == true) {
-                        for (var c = 0; c < this.ArrayOfSelectedFilename.length; c++) {
-                          this.delivery.multipleactualfilename = this.delivery.multipleactualfilename + this.ArrayOfSelectedFilename[c] + ",";
-                        }
-                        for (var x = 0; x < this.ArrayOfSelectedSavedFile.length; x++) {
-                          this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename + this.ArrayOfSelectedSavedFile[x] + ",";
-                        }
-                        this.delivery.multipleactualfilename = this.delivery.multipleactualfilename.slice(0, -1);
-                        this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename.slice(0, -1);
-                        console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
-                        console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
-
-                      }
-                      else {
-                        if (sessionStorage.getItem("invwopodetails")) {
-                          this.delivery.multipleactualfilename = this.withoutpodetails[0].SUPPORTACTFILENAME;
-                          this.delivery.multiplesavedfilename = this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
-
-                        }
-                        else if (this.TypeNo == 'resubmit') {
-                          this.delivery.multipleactualfilename = this.invoicedata[0].MULTIACTUALFILENAME;
-                          this.delivery.multiplesavedfilename = this.invoicedata[0].MULTISAVEDFILENAME;
-                        }
-                        else {
-                          this.delivery.multipleactualfilename = "";
-                          this.delivery.multiplesavedfilename = "";
-                        }
-
-                      }
-                      console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
-                      console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
-
-                      // this.delivery.multipleactualfilename=null;
-                      // this.delivery.multiplesavedfilename=null;
-                      // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
-                      // this.delivery.modified_by = sessionStorage.getItem("loginUser");
-                      // for(var j=0;j<this.uniquelineitem.length;j++)
-                      // {
-                      //   if(this.uniquelineitem[j].PONUMBER == this.uniquelineitems[a].PO_NUMBER)
-                      //   {
-                      //     delivery.buyerid = this.uniquelineitem[j].BUYER;
-                      //   }
-                      // }
-                      // delivery.buyerid = "sachin.mehta@timesgroup.com"
-
-                      this.delivery.stage = "1"
-                      console.log("this.delivery ==>", this.delivery.balance_qty);
-                      this.invoicesubmissionarray.push(this.delivery);
-                      console.log("this.invoicesubmissionarray ==>", this.invoicesubmissionarray);
-                    }
-
-                  }
-                }
-                else {
-                  console.log("in else" + count);
-
-                  if (this.uniquelineitems[a].TOINVOICELINEITEMNUMBER == this.orderlineitems[b].LINEITEMNUMBER
-                    && this.uniquelineitems[a].order == this.orderlineitems[b].DC) {
-
-
-                    console.log("count is here " + count)
-                    var quantity = this.orderlineitems[b].QUANTITY
-                    var itemAmount = this.orderlineitems[b].AMOUNT
-                    console.log("quantity " + quantity);
-                    // if (quantity > 0) {
-                    this.delivery = new Delivery();
-                    console.log("a is not empty ==>" + a);
-                    this.delivery.bid = sessionStorage.getItem("Bid");
-                    this.delivery.po_num = this.ponumber;
-                    if (this.invoice != true) {
-                      console.log("this.invoiceForm.controls['irnNo'].value;", this.invoiceForm.controls['irnNo'].value)
-                      this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
-                      console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
-
-                      this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-
-                    }
-                    else {
-                      this.delivery.irnNumber = "";
-                      if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
-                        this.delivery.irnDate = null;
-                      }
-                    }
-                    // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
-                    // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
-                    this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
-
-                    this.delivery.invoiceDate = moment(new Date(this.invoiceForm.controls['invoiceDate'].value)).format("DD/MM/YYYY");
-                    console.log("this.delivery.invoiceDate " + this.delivery.invoiceDate);
-                    // this.delivery.referenceNumber = ""
-                    // this.delivery.grnnumber = ""
-                    this.delivery.rateperquantity = this.grnuniquelineitems[a].TOINVOICERATEPERQTY.replace(/,/g, '');
-
-                    this.delivery.lineItemNumber = this.grnuniquelineitems[a].TOINVOICELINEITEMNUMBER;
-                    this.delivery.lineitemtext = this.grnuniquelineitems[a].TOINVOICELINEITEMTEXT;
-                    this.delivery.orderNumber = this.orderlineitems[b].DC;
-                    if (this.TypeNo == 'resubmit') {
-                      this.delivery.beforesubmissioninvoicenumber = this.invNo;
-                      this.delivery.businessPartnerText = this.invoicedata[0].BUSSINESSPARTNERTEXT;
-                      this.delivery.contactPerson = this.invoicedata[0].REQUSITIONER;
-                      this.delivery.buyerid = this.invoicedata[0].BUYER;
-
-                      console.log("Hello========>", this.invoicedata[0].BUSSINESSPARTNERTEXT, this.invoicedata[0].REQUSITIONER,
-                        this.invoicedata[0].BUYER
-                      );
-
-                    } else {
-                      this.delivery.beforesubmissioninvoicenumber = "";
-                      this.delivery.businessPartnerText = sessionStorage.getItem("Bussinesspartnertext");
-                      this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
-                      this.delivery.buyerid = sessionStorage.getItem("Buyer");
-                    }
-                    // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
-                    console.log(this.delivery.orderNumber, 'this.delivery.orderNumber')
-                    // this.delivery.quantity = quantity;
-                    this.delivery.quantity = this.orderlineitems[b].QUANTITY;
-                    console.log(this.delivery.orderNumber, ' this.delivery.orderNumber')
-                    console.log(this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE, ' this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE')
-                    this.delivery.uOM = this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE;
-                    this.delivery.contactPersonPhone = this.grnuniquelineitems[a].TOINVOICECONTACTPERSONPHONE;
-                    this.delivery.company = this.grnuniquelineitems[a].TOINVOICECOMPANY
-                    this.delivery.plant = this.grnuniquelineitems[a].TOINVOICEPLANT
-                    this.delivery.department = this.grnuniquelineitems[a].TOINVOICEDEPARTMENT
-                    this.delivery.storagelocation = this.grnuniquelineitems[a].TOINVOICESTORAGELOCATION
-                    this.delivery.costCentre = this.grnuniquelineitems[a].TOINVOICECOSTCENTRE
-                    this.delivery.category = this.grnuniquelineitems[a].TOINVOICECATEGORY
-
-                    this.delivery.vendorID = this.vendorid
-                    this.delivery.profileID = ""
-                    this.delivery.invoiceDocumentPath = ""
-                    this.delivery.iGSTAmount = ""
-                    this.delivery.cGSTAmount = ""
-                    this.delivery.sgstAmount = ""
-                    // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
-                    console.log("============>", this.grntobeinvoicelist);
-
-                    // if (this.tobeinvoiced == false) {
-                    //   this.delivery.grnnumber = "-";
-                    //   this.delivery.uniquereferencenumber = "-";
-                    //   this.delivery.saplineitemnumber = "-";
-                    //   this.delivery.srcnnumber = "-";
-                    // }
-                    // else {
-                    this.delivery.servicenumber = this.grnuniquelineitems[a].SERVICENUMBER;
-                    this.delivery.dcnumber = this.grnuniquelineitems[a].DCNUMBER
-                    console.log(" this.delivery.dcnumber======>", this.delivery.dcnumber);
-                    if (this.grnuniquelineitems[a].SRCNUMBER != null) {
-                      this.delivery.srcnnumber = this.grnuniquelineitems[a].SRCNUMBER;
-                    }
-                    else {
-                      this.delivery.srcnnumber = "-";
-                    }
-
-                    this.delivery.grnnumber = this.grnuniquelineitems[a].GRNMAPPNUMBER;
-                    this.delivery.uniquereferencenumber = this.grnuniquelineitems[a].SAPUNIQUEREFERENCENO;
-                    this.delivery.saplineitemnumber = this.grnuniquelineitems[a].SAPLINEITEMNO;
-                    // }
-
-                    // this.delivery.totalAmount = itemAmount;
-                    this.delivery.totalAmount = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '');
-                    this.delivery.description = this.invoiceForm.controls['description'].value;
-                    this.delivery.remark = this.invoiceForm.controls['remarks'].value;
-                    this.delivery.totalamtinctaxes = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '')
-                    this.delivery.taxamount = (this.invoiceForm.controls['taxAmount'].value).toString().replace(/,/g, '')
-                    this.delivery.status = "P"
-
-
-                    if (this.invoicefilechanged == false) {
-
-                      if (this.TypeNo == 'resubmit') {
-                        this.delivery.actualfilename = this.actualresubmitfilename;
-                        this.delivery.savedfilename = this.savedresubmitfilename;
-                      }
-                      else {
-                        this.delivery.actualfilename = this.actualfilenameofwopo;
-                        this.delivery.savedfilename = this.savedfilenameofwopo;
-                      }
-
-                    }
-                    else {
-                      this.delivery.actualfilename = this.actualfilename;
-                      this.delivery.savedfilename = this.savedfilename;
-                    }
-
-                    this.delivery.material = this.grnuniquelineitems[a].TOINVOICEMATERIAL;
-                    this.delivery.createdby = sessionStorage.getItem("loginUser");
-                    this.delivery.managerid = "sachin.kale@timesgroup.com";
-                    if (this.invoiceForm.controls['billofladingdate'].value != null) {
-                      this.delivery.billofladingdate = moment(new Date(this.invoiceForm.controls['billofladingdate'].value)).format("DD/MM/YYYY");
-
-                    }
-                    else {
-                      this.delivery.billofladingdate = "Invalid date";
-                    }
-                    console.log("this.delivery.billofladingdate " + this.delivery.billofladingdate);
-                    // return;
-                    // this.invoiceForm.controls['billofladingdate'].value;
-
-                    this.delivery.balance_qty = Number(this.grnuniquelineitems[a].BALANCE_QTY);
-                    this.delivery.invoiceamount = this.grnuniquelineitems[a].TOINVOICETOTALAMOUNT;
-
-
-                    this.delivery.multiplesavedfilename = "";
-                    this.delivery.multipleactualfilename = "";
-
-                    if (this.multiplefilechanged == true) {
-                      for (var c = 0; c < this.ArrayOfSelectedFilename.length; c++) {
-                        this.delivery.multipleactualfilename = this.delivery.multipleactualfilename + this.ArrayOfSelectedFilename[c] + ",";
-                      }
-                      for (var x = 0; x < this.ArrayOfSelectedSavedFile.length; x++) {
-                        this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename + this.ArrayOfSelectedSavedFile[x] + ",";
-                      }
-                      this.delivery.multipleactualfilename = this.delivery.multipleactualfilename.slice(0, -1);
-                      this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename.slice(0, -1);
-                      console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
-                      console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
-
-                    }
-                    else {
-                      if (sessionStorage.getItem("invwopodetails")) {
-                        this.delivery.multipleactualfilename = this.withoutpodetails[0].SUPPORTACTFILENAME;
-                        this.delivery.multiplesavedfilename = this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
-
-                      }
-                      else if (this.TypeNo == 'resubmit') {
-                        this.delivery.multipleactualfilename = this.invoicedata[0].MULTIACTUALFILENAME;
-                        this.delivery.multiplesavedfilename = this.invoicedata[0].MULTISAVEDFILENAME;
-                      }
-                      else {
-                        this.delivery.multipleactualfilename = "";
-                        this.delivery.multiplesavedfilename = "";
-                      }
-
-                    }
-                    console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
-                    console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
-
-                    // this.delivery.multipleactualfilename=null;
-                    // this.delivery.multiplesavedfilename=null;
-                    // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
-                    // this.delivery.modified_by = sessionStorage.getItem("loginUser");
-                    // for(var j=0;j<this.uniquelineitem.length;j++)
-                    // {
-                    //   if(this.uniquelineitem[j].PONUMBER == this.uniquelineitems[a].PO_NUMBER)
-                    //   {
-                    //     delivery.buyerid = this.uniquelineitem[j].BUYER;
-                    //   }
-                    // }
-                    // delivery.buyerid = "sachin.mehta@timesgroup.com"
-
-                    this.delivery.stage = "1"
-                    console.log("this.delivery ==>", this.delivery.balance_qty);
-                    this.invoicesubmissionarray.push(this.delivery);
-                    console.log("this.invoicesubmissionarray ==>", this.invoicesubmissionarray);
-                    // }
-
-                  }
-                  count++;
-                }
-
-
-
-
-
-              }
-
-            }
-
-            // this.loaderservice.hide()
-            // return false
-            // this.delivery.actualfilename = null
-            this.purchaseOrderListService.sendEmaildemo(this.invoicesubmissionarray).subscribe(res => {
-              sessionStorage.removeItem("invwopodetails");
-              if (res[0].message == "Success") {
-
-                this.purchaseOrderListService.removeEmptyDeliveries(this.ponumber, this.nullDCN).subscribe(res => {
-                  if (res[0].message == "Success") {
-
-
-
-                    this.loaderservice.hide();
-                    // this.dialogBox.popUpOpen2('Invoice has been submitted successfully', 'success', 'invoicesubmit');
-                    const dialogConfig = new MatDialogConfig();
-                    dialogConfig.data = {
-                      message: 'Invoice has been submitted successfully',
-                      condition: 'success',
-                      page: 'invoicesubmit'
-                    };
-                    const mydata = dialogConfig.data;
-                    console.log("PopupComponent", mydata);
-
-                    const dialogRef = this.dialog.open(PopupComponent, {
-                      panelClass: 'custom-modalbox',
-
-                      width: '400px',
-                      data: { datakey: dialogConfig.data }
-
-                    });
-                    dialogRef.afterClosed().subscribe(result => {
-                      console.log(`Dialog result1: ${result}`);
-                      this.router.navigate(['/trackInvoiceList']);
-                    });
-                  }
-                });
-                // sessionStorage.removeItem("invAllDetails");
-                // sessionStorage.removeItem("invsubmissionorderDetails");
-                // sessionStorage.removeItem("invsubmissionDetails");
-                // this.dialogBox.popUpOpen2('Invoice has been submitted successfully','success','invoicesubmit');
-                // this.toastr.success("Invoice Has Been Submitted Successfully")
-                console.log("Inin");
-                this.invoiceForm.reset();
-                // this.invoiceconfile = null;
-                this.viewAttachmentName = "";
-                this.successmessage = "Invoice Has Been Submitted Successfully";
-                this.success = true;
-                // this.showPopup();
-              }
-              else {
-                this.loaderservice.hide();
-                // this.dialogBox.popUpOpen2('Invoice Number Already Exist.', 'error', 'invoicesubmit');
-                const dialogConfig = new MatDialogConfig();
-                dialogConfig.data = {
-                  message: res[0].Uniquemessage,
-                  // message: 'Invoice Number Already Exist.',
-                  condition: 'error',
-                  page: 'invoicesubmit',
-                  specific:'note'
-                };
-                const mydata = dialogConfig.data;
-                console.log("PopupComponent", mydata);
-
-                const dialogRef = this.dialog.open(PopupComponent, {
-                  panelClass: 'custom-modalbox',
-
-                  width: '400px',
-                  data: { datakey: dialogConfig.data }
-
-                });
-                dialogRef.afterClosed().subscribe(result => {
-                  console.log(`Dialog result1: ${result}`);
-                });
-                // this.toastr.error(res[0].message)
-                // this.dialogBox.popUpOpen2('Error while submitting. Please try again','error','invoicesubmit');
-                this.successmessage = res[0].Uniquemessage;
-                this.error = true;
-                // this.showPopup();
-              }
-              this.loaderservice.hide();
-            });
-            // this.loaderservice.hide();
-            // }
-          })
-          // this.loaderservice.hide();
-          // console.log("autodc===========>",dcnlist);
-        }
-
-
-      });
-    }
+      }
       // else {
       //   // this.toastr.error(res[0].message)
       //   this.dialogBox.popUpOpen2('Invoice Number is Already Exist.', 'error', 'invoicesubmit');
@@ -2180,37 +2999,1349 @@ export class InvoiceSubmissionComponent implements OnInit {
       //   this.loaderservice.hide();
       //   return false;
       // }
-    }
-    else {
+    } else {
       //=--this.dialogBox.popUpOpen2('Please upload the File', 'leave', 'error2');
       // this.dialogBox.popUpOpen2('Please upload the File', 'error', 'invoicesubmit');
       const dialogConfig = new MatDialogConfig();
       dialogConfig.data = {
-        message: 'Please upload the File',
-        condition: 'error',
-        page: 'invoicesubmit'
+        message: "Please upload the File",
+        condition: "error",
+        page: "invoicesubmit",
       };
       const mydata = dialogConfig.data;
       console.log("PopupComponent", mydata);
 
       const dialogRef = this.dialog.open(PopupComponent, {
-        panelClass: 'custom-modalbox',
+        panelClass: "custom-modalbox",
 
-        width: '400px',
-        data: { datakey: dialogConfig.data }
-
+        width: "400px",
+        data: { datakey: dialogConfig.data },
       });
-      dialogRef.afterClosed().subscribe(result => {
+      dialogRef.afterClosed().subscribe((result) => {
         console.log(`Dialog result1: ${result}`);
       });
-
 
       this.loaderservice.hide();
       return false;
     }
-
-
   }
+
+  // submitinvoice() {
+  //   // console.log("compare==========>",this.invNo, this.invoiceForm.controls.invoiceNo.value);
+
+  //   console.log("why ??", this.invoiceForm.status, this.invoiceForm.value);
+  //   //  console.log("hello============>", this.invoiceForm.controls['totalOrderQty'].value, typeof(this.invoiceForm.controls['totalOrderQty'].value));
+  //   if (this.part) {
+  //     if (this.invoiceForm.controls['totalOrderQty'].value == 0) {
+  //       // this.dialogBox.popUpOpen2('Please enter quantity for atleast one line item', 'success', 'invoicesubmit');
+  //       const dialogConfig = new MatDialogConfig();
+  //       dialogConfig.data = {
+  //         message: 'Please enter quantity for atleast one line item',
+  //         condition: 'success',
+  //         page: 'invoicesubmit'
+  //       };
+  //       const mydata = dialogConfig.data;
+  //       console.log("PopupComponent", mydata);
+
+  //       const dialogRef = this.dialog.open(PopupComponent, {
+  //         panelClass: 'custom-modalbox',
+
+  //         width: '400px',
+  //         data: { datakey: dialogConfig.data }
+
+  //       });
+  //       dialogRef.afterClosed().subscribe(result => {
+  //         console.log(`Dialog result1: ${result}`);
+  //         this.router.navigate(['/trackInvoiceList']);
+  //       });
+  //       return false;
+  //     }
+
+  //   }
+  //   // return false;
+  //   this.loaderservice.show();
+  //   console.log("values here ==>", this.invoiceForm);
+  //   console.log(this.uniquelineitems.length);
+  //   // this.loaderservice.hide();
+  //   // return false;
+  //   // debugger;
+  //   console.log("this.part " + this.part);
+  //   if (this.part || this.TypeNo == 'resubmit') {
+  //     this.quantitylist = [];
+  //     this.lineitemnumberlist = [];
+
+  //     for (let a = 0; a <= this.uniquelineitems.length - 1; a++) {
+  //       if (this.invoiceForm.controls['orderValue' + a].value == null || this.invoiceForm.controls['orderValue' + a].value == '') {
+  //         // || this.uniquelineitem[a].FORECLOSESTATUSCHECK == 'X'
+  //         this.invoiceForm.controls['orderValue' + a].setValue(0);
+  //       }
+
+  //       console.log("this.invoiceForm.controls['orderValue' + a].value", this.invoiceForm.controls['orderValue' + a].value);
+
+  //       this.quantitylist.push(this.invoiceForm.controls['orderValue' + a].value);
+  //       this.lineitemnumberlist.push(this.uniquelineitems[a].LINEITEMNUMBER);
+  //     }
+  //   }
+
+  //   console.log("is it updating============>", this.quantitylist);
+
+  //   this.invoicesubmissionarray = [];
+
+  //   if ((this.viewUploadFile != null && this.viewAttachmentName != null  && this.viewAttachmentName != "") ||
+  //     (this.withoutpodetails.length != 0 && this.viewAttachmentName != null  && this.viewAttachmentName != "") ||
+  //     (this.invoicedata.length != 0 && this.viewAttachmentName != null  && this.viewAttachmentName != "")) {
+  //     console.log("inininin");
+  //     if (this.TypeNo == 'resubmit') {
+  //       this.trackOrderListService.getVendorReturn(this.ponumber, this.invNo).subscribe(res => {
+  //         if(res[0].message == " Vendor Return done Sucess")
+  //         {
+  //           this.purchaseOrderListService.createcustomdeliveryitems(this.ponumber, this.fullpodate, this.lineitemnumberlist, this.quantitylist).subscribe(res => {
+
+  //             if (res[0].message == "Success") {
+                
+  //               this.loaderservice.show();
+  //               var dcnlist: any = []
+  //               res[0].dcnvalues.forEach(element => {
+  //                 dcnlist.push(element)
+  //               });
+      
+  //               this.purchaseOrderListService.setDCNumbers(this.ponumber, dcnlist).subscribe(res1 => {
+  //                 console.log("return========>", res1[0].message, res1[0].orderitems);
+      
+  //                 this.orderlineitems = res1[0].orderitems;
+  //                 // res1[0].orderitems.forEach(data => {
+  //                 //   this.orderlineitems.push(data);
+  //                 // });
+      
+  //                 for (let s = 0; s < this.orderlineitems.length; s++) {
+  //                   if (this.orderlineitems[s].QUANTITY == 0 || this.orderlineitems[s].QUANTITY == 0.00) {
+  //                     this.nullDCN.push(this.orderlineitems[s].DC)
+  //                   }
+  //                 }
+  //                 console.log(this.uniquelineitems, 'this.uniquelineitems.length');
+  //                 console.log(this.orderlineitems, 'this.orderlineitems.length');
+  //                 for (var k = 0; k < this.uniquelineitems.length; k++) {
+  //                   this.uniquelineitems[k].order = this.orderlineitems[k].DC;
+  //                 }
+      
+  //                 // this.loaderservice.hide();
+      
+      
+  //                 // this.actualfilename = this.viewUploadFile.name;
+      
+  //                 // var fileName = this.getFileNameWOExtention(this.viewUploadFile.name) + "_";
+  //                 // fileName = this.getTimeStampFileName(fileName, this.getExtensionOfFile(this.viewUploadFile.name));
+  //                 // var fileName2 = fileName;
+  //                 // fileName = this.ponumber + "_invoice_" + fileName;
+  //                 // this.savedfilename = fileName;
+  //                 // console.log("FileName here" + fileName);
+  //                 // this.purchaseOrderListService.fileupload(this.viewUploadFile, fileName).subscribe(res => {
+  //                 //   console.log(JSON.stringify(res))
+  //                 //   res[0].data = true;
+  //                 //   if (res.length == 0) {
+  //                 //     this.loaderservice.hide();
+  //                 //     return false;
+  //                 //   }
+  //                 // else if (res[0].status == "Success") {
+      
+  //                 // return false
+  //                 console.log("this.uniquelineitems >>", this.uniquelineitems);
+  //                 console.log("this.orderlineitems >>", this.orderlineitems);
+  //                 console.log("this.uniquelineitems.length >>" + this.uniquelineitems.length);
+  //                 console.log("this.orderlineitems.length >>" + this.orderlineitems.length);
+  //                 // return;
+  //                 var count = 0;
+  //                 for (var a = 0; a < this.uniquelineitems.length; a++) {
+  //                   console.log("a is here =>" + a);
+  //                   for (var b = 0; b < this.orderlineitems.length; b++) {
+  //                     // debugger
+  //                     console.log(this.uniquelineitems[a].LINEITEMNUMBER, 'this.uniquelineitems.LINEITEMNUMBER')
+  //                     console.log(this.orderlineitems[b].LINEITEMNUMBER, 'this.orderlineitems.LINEITEMNUMBER')
+  //                     if (this.grntobeinvoicelist.length == 0) {
+  //                       if (this.uniquelineitems[a].LINEITEMNUMBER == this.orderlineitems[b].LINEITEMNUMBER) {
+      
+  //                         // var quantity = $('#Quantity' + b).val();
+  //                         // var itemAmount = $('#itemAmount' + b).val();
+  //                         // debugger;
+  //                         console.log("this.uniquelineitems[a].LINEITEMNUMBER " + this.uniquelineitems[a].LINEITEMNUMBER +
+  //                           "BALANCE_QTY " + this.uniquelineitems[a].BALANCE_QTY);
+      
+  //                         var quantity = this.orderlineitems[b].QUANTITY
+  //                         var itemAmount = this.orderlineitems[b].AMOUNT
+  //                         console.log("quantity " + quantity);
+  //                         if (quantity > 0) {
+  //                           this.delivery = new Delivery();
+  //                           console.log("a is not empty ==>" + a);
+  //                           this.delivery.bid = sessionStorage.getItem("Bid");
+  //                           this.delivery.po_num = this.ponumber;
+  //                           if (this.invoice != true) {
+  //                             console.log("this.invoiceForm.controls['irnNo'].value;", this.invoiceForm.controls['irnNo'].value)
+  //                             this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+  //                             console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
+      
+  //                             this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+      
+  //                           }
+  //                           else {
+  //                             this.delivery.irnNumber = "";
+  //                             if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+  //                               this.delivery.irnDate = null;
+  //                             }
+  //                           }
+  //                           // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+  //                           // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+  //                           this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
+      
+  //                           this.delivery.invoiceDate = moment(new Date(this.invoiceForm.controls['invoiceDate'].value)).format("DD/MM/YYYY");
+  //                           console.log("this.delivery.invoiceDate " + this.delivery.invoiceDate);
+  //                           // this.delivery.referenceNumber = ""
+  //                           // this.delivery.grnnumber = ""
+  //                           this.delivery.rateperquantity = this.uniquelineitems[a].RATEPERQTY.replace(/,/g, '');
+  //                           if (this.tobeinvoiced == false) {
+  //                             this.delivery.lineItemNumber = this.uniquelineitems[a].LINEITEMNUMBER;
+  //                             this.delivery.lineitemtext = this.uniquelineitems[a].LINEITEMTEXT;
+  //                           }
+  //                           else {
+  //                             this.delivery.lineItemNumber = this.uniquelineitems[a].TOINVOICELINEITEMNUMBER;
+  //                             this.delivery.lineitemtext = this.uniquelineitems[a].TOINVOICELINEITEMTEXT;
+  //                           }
+      
+  //                           this.delivery.orderNumber = this.orderlineitems[b].DC;
+  //                           if (this.TypeNo == 'resubmit') {
+  //                             this.delivery.beforesubmissioninvoicenumber = this.invNo;
+  //                             this.delivery.businessPartnerText = this.invoicedata[0].BUSSINESSPARTNERTEXT;
+  //                             this.delivery.contactPerson = this.invoicedata[0].REQUSITIONER;
+  //                             this.delivery.buyerid = this.invoicedata[0].BUYER;
+      
+  //                             console.log("Hello========>", this.invoicedata[0].BUSSINESSPARTNERTEXT, this.invoicedata[0].REQUSITIONER,
+  //                               this.invoicedata[0].BUYER
+  //                             );
+      
+  //                           } else {
+  //                             this.delivery.beforesubmissioninvoicenumber = "";
+  //                             this.delivery.businessPartnerText = sessionStorage.getItem("Bussinesspartnertext");
+  //                             this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
+  //                             this.delivery.buyerid = sessionStorage.getItem("Buyer");
+  //                           }
+  //                           // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
+  //                           console.log(this.delivery.orderNumber, 'this.delivery.orderNumber')
+  //                           // this.delivery.quantity = quantity;
+  //                           this.delivery.quantity = this.orderlineitems[b].QUANTITY;
+  //                           console.log(this.delivery.orderNumber, ' this.delivery.orderNumber')
+  //                           console.log(this.delivery.quantity, ' this.delivery.quantity')
+  //                           this.delivery.uOM = this.uniquelineitems[a].UNITOFMEASURE;
+      
+  //                           this.delivery.contactPersonPhone = this.uniquelineitems[a].CONTACTPERSONPHONE;
+  //                           // this.delivery.vendorID = this.uniquelineitems[a].vendorId;
+  //                           this.delivery.vendorID = this.vendorid
+  //                           this.delivery.company = this.uniquelineitems[a].COMPANY
+  //                           this.delivery.plant = this.uniquelineitems[a].PLANT
+  //                           this.delivery.department = this.uniquelineitems[a].DEPARTMENT
+  //                           this.delivery.storagelocation = this.uniquelineitems[a].STORAGELOCATION
+  //                           this.delivery.costCentre = this.uniquelineitems[a].COSTCENTRE
+  //                           this.delivery.category = this.uniquelineitems[a].CATEGORY
+      
+      
+  //                           this.delivery.profileID = ""
+  //                           this.delivery.invoiceDocumentPath = ""
+  //                           this.delivery.iGSTAmount = ""
+  //                           this.delivery.cGSTAmount = ""
+  //                           this.delivery.sgstAmount = ""
+  //                           this.delivery.servicenumber = this.uniquelineitems[a].SERVICENUMBER;
+  //                           // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
+  //                           console.log("============>", this.grntobeinvoicelist);
+      
+  //                           if (this.tobeinvoiced == false) {
+  //                             this.delivery.grnnumber = "-";
+  //                             this.delivery.uniquereferencenumber = "-";
+  //                             this.delivery.saplineitemnumber = "-";
+  //                             this.delivery.srcnnumber = "-";
+  //                           }
+  //                           else {
+  //                             this.delivery.servicenumber = this.uniquelineitems[a].SERVICENUMBER;
+  //                             this.delivery.dcnumber = this.uniquelineitems[a].DCNUMBER
+  //                             console.log(" this.delivery.dcnumber======>", this.delivery.dcnumber);
+  //                             if (this.uniquelineitems[a].SRCNUMBER != null) {
+  //                               this.delivery.srcnnumber = this.uniquelineitems[a].SRCNUMBER;
+  //                             }
+  //                             else {
+  //                               this.delivery.srcnnumber = "-";
+  //                             }
+      
+  //                             this.delivery.grnnumber = this.uniquelineitems[a].GRNMAPPNUMBER;
+  //                             this.delivery.uniquereferencenumber = this.uniquelineitems[a].SAPUNIQUEREFERENCENO;
+  //                             this.delivery.saplineitemnumber = this.uniquelineitems[a].SAPLINEITEMNO;
+  //                           }
+      
+  //                           // this.delivery.totalAmount = itemAmount;
+  //                           this.delivery.totalAmount = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '');
+  //                           this.delivery.description = this.invoiceForm.controls['description'].value;
+  //                           this.delivery.remark = this.invoiceForm.controls['remarks'].value;
+  //                           this.delivery.totalamtinctaxes = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '')
+  //                           this.delivery.taxamount = (this.invoiceForm.controls['taxAmount'].value).toString().replace(/,/g, '')
+  //                           this.delivery.status = "P"
+      
+      
+  //                           if (this.invoicefilechanged == false) {
+      
+  //                             if (this.TypeNo == 'resubmit') {
+  //                               this.delivery.actualfilename = this.actualresubmitfilename;
+  //                               this.delivery.savedfilename = this.savedresubmitfilename;
+  //                             }
+  //                             else {
+  //                               this.delivery.actualfilename = this.actualfilenameofwopo;
+  //                               this.delivery.savedfilename = this.savedfilenameofwopo;
+  //                             }
+      
+  //                           }
+  //                           else {
+  //                             this.delivery.actualfilename = this.actualfilename;
+  //                             this.delivery.savedfilename = this.savedfilename;
+  //                           }
+      
+  //                           this.delivery.material = this.uniquelineitems[a].MATERIAL;
+  //                           this.delivery.createdby = sessionStorage.getItem("loginUser");
+  //                           this.delivery.managerid = "sachin.kale@timesgroup.com";
+  //                           if (this.invoiceForm.controls['billofladingdate'].value != null) {
+  //                             this.delivery.billofladingdate = moment(new Date(this.invoiceForm.controls['billofladingdate'].value)).format("DD/MM/YYYY");
+      
+  //                           }
+  //                           else {
+  //                             this.delivery.billofladingdate = "Invalid date";
+  //                           }
+  //                           console.log("this.delivery.billofladingdate " + this.delivery.billofladingdate);
+  //                           // return;
+  //                           // this.invoiceForm.controls['billofladingdate'].value;
+      
+  //                           this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY);
+  //                           console.log("a is here " + a);
+  //                           console.log("this.uniquelineitems[a].BALANCE_QTY is here " + this.uniquelineitems[a].BALANCE_QTY);
+  //                           if (this.grntobeinvoicelist.length == 0) {
+  //                             if (this.part || this.TypeNo == 'resubmit') {
+  //                               this.delivery.invoiceamount = this.invoiceForm.controls['calRealtime' + a].value;
+  //                             }
+  //                             else if (this.full) {
+  //                               this.delivery.invoiceamount = this.uniquelineitems[a].INVAMOUNT;
+  //                             }
+  //                           }
+  //                           else {
+  //                             this.delivery.invoiceamount = this.uniquelineitems[a].INVAMOUNT;
+      
+  //                           }
+      
+  //                           this.delivery.multiplesavedfilename = "";
+  //                           this.delivery.multipleactualfilename = "";
+      
+  //                           if (this.multiplefilechanged == true) {
+  //                             for (var c = 0; c < this.ArrayOfSelectedFilename.length; c++) {
+  //                               this.delivery.multipleactualfilename = this.delivery.multipleactualfilename + this.ArrayOfSelectedFilename[c] + ",";
+  //                             }
+  //                             for (var x = 0; x < this.ArrayOfSelectedSavedFile.length; x++) {
+  //                               this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename + this.ArrayOfSelectedSavedFile[x] + ",";
+  //                             }
+  //                             this.delivery.multipleactualfilename = this.delivery.multipleactualfilename.slice(0, -1);
+  //                             this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename.slice(0, -1);
+  //                             console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
+  //                             console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
+      
+  //                           }
+  //                           else {
+  //                             if (sessionStorage.getItem("invwopodetails")) {
+  //                               this.delivery.multipleactualfilename = this.withoutpodetails[0].SUPPORTACTFILENAME;
+  //                               this.delivery.multiplesavedfilename = this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
+      
+  //                             }
+  //                             else if (this.TypeNo == 'resubmit') {
+  //                               this.delivery.multipleactualfilename = this.invoicedata[0].MULTIACTUALFILENAME;
+  //                               this.delivery.multiplesavedfilename = this.invoicedata[0].MULTISAVEDFILENAME;
+  //                             }
+  //                             else {
+  //                               this.delivery.multipleactualfilename = "";
+  //                               this.delivery.multiplesavedfilename = "";
+  //                             }
+      
+  //                           }
+  //                           console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
+  //                           console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
+      
+  //                           // this.delivery.multipleactualfilename=null;
+  //                           // this.delivery.multiplesavedfilename=null;
+  //                           // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
+  //                           // this.delivery.modified_by = sessionStorage.getItem("loginUser");
+  //                           // for(var j=0;j<this.uniquelineitem.length;j++)
+  //                           // {
+  //                           //   if(this.uniquelineitem[j].PONUMBER == this.uniquelineitems[a].PO_NUMBER)
+  //                           //   {
+  //                           //     delivery.buyerid = this.uniquelineitem[j].BUYER;
+  //                           //   }
+  //                           // }
+  //                           // delivery.buyerid = "sachin.mehta@timesgroup.com"
+      
+  //                           this.delivery.stage = "1"
+  //                           console.log("this.delivery ==>", this.delivery.balance_qty);
+  //                           this.invoicesubmissionarray.push(this.delivery);
+  //                           console.log("this.invoicesubmissionarray ==>", this.invoicesubmissionarray);
+  //                         }
+      
+  //                       }
+  //                     }
+  //                     else {
+  //                       console.log("in else" + count);
+      
+  //                       if (this.uniquelineitems[a].TOINVOICELINEITEMNUMBER == this.orderlineitems[b].LINEITEMNUMBER
+  //                         && this.uniquelineitems[a].order == this.orderlineitems[b].DC) {
+      
+      
+  //                         console.log("count is here " + count)
+  //                         var quantity = this.orderlineitems[b].QUANTITY
+  //                         var itemAmount = this.orderlineitems[b].AMOUNT
+  //                         console.log("quantity " + quantity);
+  //                         // if (quantity > 0) {
+  //                         this.delivery = new Delivery();
+  //                         console.log("a is not empty ==>" + a);
+  //                         this.delivery.bid = sessionStorage.getItem("Bid");
+  //                         this.delivery.po_num = this.ponumber;
+  //                         if (this.invoice != true) {
+  //                           console.log("this.invoiceForm.controls['irnNo'].value;", this.invoiceForm.controls['irnNo'].value)
+  //                           this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+  //                           console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
+      
+  //                           this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+      
+  //                         }
+  //                         else {
+  //                           this.delivery.irnNumber = "";
+  //                           if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+  //                             this.delivery.irnDate = null;
+  //                           }
+  //                         }
+  //                         // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+  //                         // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+  //                         this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
+      
+  //                         this.delivery.invoiceDate = moment(new Date(this.invoiceForm.controls['invoiceDate'].value)).format("DD/MM/YYYY");
+  //                         console.log("this.delivery.invoiceDate " + this.delivery.invoiceDate);
+  //                         // this.delivery.referenceNumber = ""
+  //                         // this.delivery.grnnumber = ""
+  //                         this.delivery.rateperquantity = this.grnuniquelineitems[a].TOINVOICERATEPERQTY.replace(/,/g, '');
+      
+  //                         this.delivery.lineItemNumber = this.grnuniquelineitems[a].TOINVOICELINEITEMNUMBER;
+  //                         this.delivery.lineitemtext = this.grnuniquelineitems[a].TOINVOICELINEITEMTEXT;
+  //                         this.delivery.orderNumber = this.orderlineitems[b].DC;
+  //                         if (this.TypeNo == 'resubmit') {
+  //                           this.delivery.beforesubmissioninvoicenumber = this.invNo;
+  //                           this.delivery.businessPartnerText = this.invoicedata[0].BUSSINESSPARTNERTEXT;
+  //                           this.delivery.contactPerson = this.invoicedata[0].REQUSITIONER;
+  //                           this.delivery.buyerid = this.invoicedata[0].BUYER;
+      
+  //                           console.log("Hello========>", this.invoicedata[0].BUSSINESSPARTNERTEXT, this.invoicedata[0].REQUSITIONER,
+  //                             this.invoicedata[0].BUYER
+  //                           );
+      
+  //                         } else {
+  //                           this.delivery.beforesubmissioninvoicenumber = "";
+  //                           this.delivery.businessPartnerText = sessionStorage.getItem("Bussinesspartnertext");
+  //                           this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
+  //                           this.delivery.buyerid = sessionStorage.getItem("Buyer");
+  //                         }
+  //                         // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
+  //                         console.log(this.delivery.orderNumber, 'this.delivery.orderNumber')
+  //                         // this.delivery.quantity = quantity;
+  //                         this.delivery.quantity = this.orderlineitems[b].QUANTITY;
+  //                         console.log(this.delivery.orderNumber, ' this.delivery.orderNumber')
+  //                         console.log(this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE, ' this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE')
+  //                         this.delivery.uOM = this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE;
+  //                         this.delivery.contactPersonPhone = this.grnuniquelineitems[a].TOINVOICECONTACTPERSONPHONE;
+  //                         this.delivery.company = this.grnuniquelineitems[a].TOINVOICECOMPANY
+  //                         this.delivery.plant = this.grnuniquelineitems[a].TOINVOICEPLANT
+  //                         this.delivery.department = this.grnuniquelineitems[a].TOINVOICEDEPARTMENT
+  //                         this.delivery.storagelocation = this.grnuniquelineitems[a].TOINVOICESTORAGELOCATION
+  //                         this.delivery.costCentre = this.grnuniquelineitems[a].TOINVOICECOSTCENTRE
+  //                         this.delivery.category = this.grnuniquelineitems[a].TOINVOICECATEGORY
+      
+  //                         this.delivery.vendorID = this.vendorid
+  //                         this.delivery.profileID = ""
+  //                         this.delivery.invoiceDocumentPath = ""
+  //                         this.delivery.iGSTAmount = ""
+  //                         this.delivery.cGSTAmount = ""
+  //                         this.delivery.sgstAmount = ""
+  //                         // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
+  //                         console.log("============>", this.grntobeinvoicelist);
+      
+  //                         // if (this.tobeinvoiced == false) {
+  //                         //   this.delivery.grnnumber = "-";
+  //                         //   this.delivery.uniquereferencenumber = "-";
+  //                         //   this.delivery.saplineitemnumber = "-";
+  //                         //   this.delivery.srcnnumber = "-";
+  //                         // }
+  //                         // else {
+  //                         this.delivery.servicenumber = this.grnuniquelineitems[a].SERVICENUMBER;
+  //                         this.delivery.dcnumber = this.grnuniquelineitems[a].DCNUMBER
+  //                         console.log(" this.delivery.dcnumber======>", this.delivery.dcnumber);
+  //                         if (this.grnuniquelineitems[a].SRCNUMBER != null) {
+  //                           this.delivery.srcnnumber = this.grnuniquelineitems[a].SRCNUMBER;
+  //                         }
+  //                         else {
+  //                           this.delivery.srcnnumber = "-";
+  //                         }
+      
+  //                         this.delivery.grnnumber = this.grnuniquelineitems[a].GRNMAPPNUMBER;
+  //                         this.delivery.uniquereferencenumber = this.grnuniquelineitems[a].SAPUNIQUEREFERENCENO;
+  //                         this.delivery.saplineitemnumber = this.grnuniquelineitems[a].SAPLINEITEMNO;
+  //                         // }
+      
+  //                         // this.delivery.totalAmount = itemAmount;
+  //                         this.delivery.totalAmount = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '');
+  //                         this.delivery.description = this.invoiceForm.controls['description'].value;
+  //                         this.delivery.remark = this.invoiceForm.controls['remarks'].value;
+  //                         this.delivery.totalamtinctaxes = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '')
+  //                         this.delivery.taxamount = (this.invoiceForm.controls['taxAmount'].value).toString().replace(/,/g, '')
+  //                         this.delivery.status = "P"
+      
+      
+  //                         if (this.invoicefilechanged == false) {
+      
+  //                           if (this.TypeNo == 'resubmit') {
+  //                             this.delivery.actualfilename = this.actualresubmitfilename;
+  //                             this.delivery.savedfilename = this.savedresubmitfilename;
+  //                           }
+  //                           else {
+  //                             this.delivery.actualfilename = this.actualfilenameofwopo;
+  //                             this.delivery.savedfilename = this.savedfilenameofwopo;
+  //                           }
+      
+  //                         }
+  //                         else {
+  //                           this.delivery.actualfilename = this.actualfilename;
+                           
+  //                           this.delivery.savedfilename = this.savedfilename;
+  //                         }
+  //                         this.delivery.material = this.grnuniquelineitems[a].TOINVOICEMATERIAL;
+  //                         this.delivery.createdby = sessionStorage.getItem("loginUser");
+  //                         this.delivery.managerid = "sachin.kale@timesgroup.com";
+  //                         if (this.invoiceForm.controls['billofladingdate'].value != null) {
+  //                           this.delivery.billofladingdate = moment(new Date(this.invoiceForm.controls['billofladingdate'].value)).format("DD/MM/YYYY");
+      
+  //                         }
+  //                         else {
+  //                           this.delivery.billofladingdate = "Invalid date";
+  //                         }
+  //                         console.log("this.delivery.billofladingdate " + this.delivery.billofladingdate);
+  //                         // return;
+  //                         // this.invoiceForm.controls['billofladingdate'].value;
+      
+  //                         this.delivery.balance_qty = Number(this.grnuniquelineitems[a].BALANCE_QTY);
+  //                         this.delivery.invoiceamount = this.grnuniquelineitems[a].TOINVOICETOTALAMOUNT;
+      
+      
+  //                         this.delivery.multiplesavedfilename = "";
+  //                         this.delivery.multipleactualfilename = "";
+      
+  //                         if (this.multiplefilechanged == true) {
+  //                           for (var c = 0; c < this.ArrayOfSelectedFilename.length; c++) {
+  //                             this.delivery.multipleactualfilename = this.delivery.multipleactualfilename + this.ArrayOfSelectedFilename[c] + ",";
+  //                           }
+  //                           for (var x = 0; x < this.ArrayOfSelectedSavedFile.length; x++) {
+  //                             this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename + this.ArrayOfSelectedSavedFile[x] + ",";
+  //                           }
+  //                           this.delivery.multipleactualfilename = this.delivery.multipleactualfilename.slice(0, -1);
+  //                           this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename.slice(0, -1);
+  //                           console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
+  //                           console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
+      
+  //                         }
+  //                         else {
+  //                           if (sessionStorage.getItem("invwopodetails")) {
+  //                             this.delivery.multipleactualfilename = this.withoutpodetails[0].SUPPORTACTFILENAME;
+  //                             this.delivery.multiplesavedfilename = this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
+      
+  //                           }
+  //                           else if (this.TypeNo == 'resubmit') {
+  //                             this.delivery.multipleactualfilename = this.invoicedata[0].MULTIACTUALFILENAME;
+  //                             this.delivery.multiplesavedfilename = this.invoicedata[0].MULTISAVEDFILENAME;
+  //                           }
+  //                           else {
+  //                             this.delivery.multipleactualfilename = "";
+  //                             this.delivery.multiplesavedfilename = "";
+  //                           }
+      
+  //                         }
+  //                         console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
+  //                         console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
+      
+  //                         // this.delivery.multipleactualfilename=null;
+  //                         // this.delivery.multiplesavedfilename=null;
+  //                         // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
+  //                         // this.delivery.modified_by = sessionStorage.getItem("loginUser");
+  //                         // for(var j=0;j<this.uniquelineitem.length;j++)
+  //                         // {
+  //                         //   if(this.uniquelineitem[j].PONUMBER == this.uniquelineitems[a].PO_NUMBER)
+  //                         //   {
+  //                         //     delivery.buyerid = this.uniquelineitem[j].BUYER;
+  //                         //   }
+  //                         // }
+  //                         // delivery.buyerid = "sachin.mehta@timesgroup.com"
+      
+  //                         this.delivery.stage = "1"
+  //                         console.log("this.delivery ==>", this.delivery.balance_qty);
+  //                         this.invoicesubmissionarray.push(this.delivery);
+  //                         console.log("this.invoicesubmissionarray ==>", this.invoicesubmissionarray);
+  //                         // }
+      
+  //                       }
+  //                       count++;
+  //                     }
+      
+      
+      
+      
+      
+  //                   }
+      
+  //                 }
+      
+  //                 // this.loaderservice.hide()
+  //                 // return false
+  //                 // this.delivery.actualfilename = null
+  //                 this.purchaseOrderListService.sendEmaildemo(this.invoicesubmissionarray).subscribe(res => {
+  //                   sessionStorage.removeItem("invwopodetails");
+  //                   if (res[0].message == "Success") {
+      
+  //                     this.purchaseOrderListService.removeEmptyDeliveries(this.ponumber, this.nullDCN).subscribe(res => {
+  //                       if (res[0].message == "Success") {
+      
+      
+      
+  //                         this.loaderservice.hide();
+  //                         // this.dialogBox.popUpOpen2('Invoice has been submitted successfully', 'success', 'invoicesubmit');
+  //                         const dialogConfig = new MatDialogConfig();
+  //                         dialogConfig.data = {
+  //                           message: 'Invoice has been submitted successfully',
+  //                           condition: 'success',
+  //                           page: 'invoicesubmit'
+  //                         };
+  //                         const mydata = dialogConfig.data;
+  //                         console.log("PopupComponent", mydata);
+      
+  //                         const dialogRef = this.dialog.open(PopupComponent, {
+  //                           panelClass: 'custom-modalbox',
+      
+  //                           width: '400px',
+  //                           data: { datakey: dialogConfig.data }
+      
+  //                         });
+  //                         dialogRef.afterClosed().subscribe(result => {
+  //                           console.log(`Dialog result1: ${result}`);
+  //                           this.router.navigate(['/trackInvoiceList']);
+  //                         });
+  //                       }
+  //                     });
+  //                     // sessionStorage.removeItem("invAllDetails");
+  //                     // sessionStorage.removeItem("invsubmissionorderDetails");
+  //                     // sessionStorage.removeItem("invsubmissionDetails");
+  //                     // this.dialogBox.popUpOpen2('Invoice has been submitted successfully','success','invoicesubmit');
+  //                     // this.toastr.success("Invoice Has Been Submitted Successfully")
+  //                     console.log("Inin");
+  //                     this.invoiceForm.reset();
+  //                     // this.invoiceconfile = null;
+  //                     this.viewAttachmentName = "";
+  //                     this.successmessage = "Invoice Has Been Submitted Successfully";
+  //                     this.success = true;
+  //                     // this.showPopup();
+  //                   }
+  //                   else {
+  //                     this.loaderservice.hide();
+  //                     // this.dialogBox.popUpOpen2('Invoice Number Already Exist.', 'error', 'invoicesubmit');
+  //                     const dialogConfig = new MatDialogConfig();
+  //                     dialogConfig.data = {
+  //                       message: res[0].Uniquemessage,
+  //                       // message: 'Invoice Number Already Exist.',
+  //                       condition: 'error',
+  //                       page: 'invoicesubmit',
+  //                       specific:'note'
+  //                     };
+  //                     const mydata = dialogConfig.data;
+  //                     console.log("PopupComponent", mydata);
+      
+  //                     const dialogRef = this.dialog.open(PopupComponent, {
+  //                       panelClass: 'custom-modalbox',
+      
+  //                       width: '400px',
+  //                       data: { datakey: dialogConfig.data }
+      
+  //                     });
+  //                     dialogRef.afterClosed().subscribe(result => {
+  //                       console.log(`Dialog result1: ${result}`);
+  //                     });
+  //                     // this.toastr.error(res[0].message)
+  //                     // this.dialogBox.popUpOpen2('Error while submitting. Please try again','error','invoicesubmit');
+  //                     this.successmessage = res[0].Uniquemessage;
+  //                     this.error = true;
+  //                     // this.showPopup();
+  //                   }
+  //                   this.loaderservice.hide();
+  //                 });
+  //                 // this.loaderservice.hide();
+  //                 // }
+  //               })
+  //               // this.loaderservice.hide();
+  //               // console.log("autodc===========>",dcnlist);
+  //             }
+  //           });
+  //         }
+  //       });
+  //     }
+  //     else
+  //     {
+  //     this.purchaseOrderListService.createcustomdeliveryitems(this.ponumber, this.fullpodate, this.lineitemnumberlist, this.quantitylist).subscribe(res => {
+
+  //       if (res[0].message == "Success") {
+          
+  //         this.loaderservice.show();
+  //         var dcnlist: any = []
+  //         res[0].dcnvalues.forEach(element => {
+  //           dcnlist.push(element)
+  //         });
+
+  //         this.purchaseOrderListService.setDCNumbers(this.ponumber, dcnlist).subscribe(res1 => {
+  //           console.log("return========>", res1[0].message, res1[0].orderitems);
+
+  //           this.orderlineitems = res1[0].orderitems;
+  //           // res1[0].orderitems.forEach(data => {
+  //           //   this.orderlineitems.push(data);
+  //           // });
+
+  //           for (let s = 0; s < this.orderlineitems.length; s++) {
+  //             if (this.orderlineitems[s].QUANTITY == 0 || this.orderlineitems[s].QUANTITY == 0.00) {
+  //               this.nullDCN.push(this.orderlineitems[s].DC)
+  //             }
+  //           }
+  //           console.log(this.uniquelineitems, 'this.uniquelineitems.length');
+  //           console.log(this.orderlineitems, 'this.orderlineitems.length');
+  //           for (var k = 0; k < this.uniquelineitems.length; k++) {
+  //             this.uniquelineitems[k].order = this.orderlineitems[k].DC;
+  //           }
+
+  //           // this.loaderservice.hide();
+
+
+  //           // this.actualfilename = this.viewUploadFile.name;
+
+  //           // var fileName = this.getFileNameWOExtention(this.viewUploadFile.name) + "_";
+  //           // fileName = this.getTimeStampFileName(fileName, this.getExtensionOfFile(this.viewUploadFile.name));
+  //           // var fileName2 = fileName;
+  //           // fileName = this.ponumber + "_invoice_" + fileName;
+  //           // this.savedfilename = fileName;
+  //           // console.log("FileName here" + fileName);
+  //           // this.purchaseOrderListService.fileupload(this.viewUploadFile, fileName).subscribe(res => {
+  //           //   console.log(JSON.stringify(res))
+  //           //   res[0].data = true;
+  //           //   if (res.length == 0) {
+  //           //     this.loaderservice.hide();
+  //           //     return false;
+  //           //   }
+  //           // else if (res[0].status == "Success") {
+
+  //           // return false
+  //           console.log("this.uniquelineitems >>", this.uniquelineitems);
+  //           console.log("this.orderlineitems >>", this.orderlineitems);
+  //           console.log("this.uniquelineitems.length >>" + this.uniquelineitems.length);
+  //           console.log("this.orderlineitems.length >>" + this.orderlineitems.length);
+  //           // return;
+  //           var count = 0;
+  //           for (var a = 0; a < this.uniquelineitems.length; a++) {
+  //             console.log("a is here =>" + a);
+  //             for (var b = 0; b < this.orderlineitems.length; b++) {
+  //               // debugger
+  //               console.log(this.uniquelineitems[a].LINEITEMNUMBER, 'this.uniquelineitems.LINEITEMNUMBER')
+  //               console.log(this.orderlineitems[b].LINEITEMNUMBER, 'this.orderlineitems.LINEITEMNUMBER')
+  //               if (this.grntobeinvoicelist.length == 0) {
+  //                 if (this.uniquelineitems[a].LINEITEMNUMBER == this.orderlineitems[b].LINEITEMNUMBER) {
+
+  //                   // var quantity = $('#Quantity' + b).val();
+  //                   // var itemAmount = $('#itemAmount' + b).val();
+  //                   // debugger;
+  //                   console.log("this.uniquelineitems[a].LINEITEMNUMBER " + this.uniquelineitems[a].LINEITEMNUMBER +
+  //                     "BALANCE_QTY " + this.uniquelineitems[a].BALANCE_QTY);
+
+  //                   var quantity = this.orderlineitems[b].QUANTITY
+  //                   var itemAmount = this.orderlineitems[b].AMOUNT
+  //                   console.log("quantity " + quantity);
+  //                   if (quantity > 0) {
+  //                     this.delivery = new Delivery();
+  //                     console.log("a is not empty ==>" + a);
+  //                     this.delivery.bid = sessionStorage.getItem("Bid");
+  //                     this.delivery.po_num = this.ponumber;
+  //                     if (this.invoice != true) {
+  //                       console.log("this.invoiceForm.controls['irnNo'].value;", this.invoiceForm.controls['irnNo'].value)
+  //                       this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+  //                       console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
+
+  //                       this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+
+  //                     }
+  //                     else {
+  //                       this.delivery.irnNumber = "";
+  //                       if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+  //                         this.delivery.irnDate = null;
+  //                       }
+  //                     }
+  //                     // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+  //                     // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+  //                     this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
+
+  //                     this.delivery.invoiceDate = moment(new Date(this.invoiceForm.controls['invoiceDate'].value)).format("DD/MM/YYYY");
+  //                     console.log("this.delivery.invoiceDate " + this.delivery.invoiceDate);
+  //                     // this.delivery.referenceNumber = ""
+  //                     // this.delivery.grnnumber = ""
+  //                     this.delivery.rateperquantity = this.uniquelineitems[a].RATEPERQTY.replace(/,/g, '');
+  //                     if (this.tobeinvoiced == false) {
+  //                       this.delivery.lineItemNumber = this.uniquelineitems[a].LINEITEMNUMBER;
+  //                       this.delivery.lineitemtext = this.uniquelineitems[a].LINEITEMTEXT;
+  //                     }
+  //                     else {
+  //                       this.delivery.lineItemNumber = this.uniquelineitems[a].TOINVOICELINEITEMNUMBER;
+  //                       this.delivery.lineitemtext = this.uniquelineitems[a].TOINVOICELINEITEMTEXT;
+  //                     }
+
+  //                     this.delivery.orderNumber = this.orderlineitems[b].DC;
+  //                     if (this.TypeNo == 'resubmit') {
+  //                       this.delivery.beforesubmissioninvoicenumber = this.invNo;
+  //                       this.delivery.businessPartnerText = this.invoicedata[0].BUSSINESSPARTNERTEXT;
+  //                       this.delivery.contactPerson = this.invoicedata[0].REQUSITIONER;
+  //                       this.delivery.buyerid = this.invoicedata[0].BUYER;
+
+  //                       console.log("Hello========>", this.invoicedata[0].BUSSINESSPARTNERTEXT, this.invoicedata[0].REQUSITIONER,
+  //                         this.invoicedata[0].BUYER
+  //                       );
+
+  //                     } else {
+  //                       this.delivery.beforesubmissioninvoicenumber = "";
+  //                       this.delivery.businessPartnerText = sessionStorage.getItem("Bussinesspartnertext");
+  //                       this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
+  //                       this.delivery.buyerid = sessionStorage.getItem("Buyer");
+  //                     }
+  //                     // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
+  //                     console.log(this.delivery.orderNumber, 'this.delivery.orderNumber')
+  //                     // this.delivery.quantity = quantity;
+  //                     this.delivery.quantity = this.orderlineitems[b].QUANTITY;
+  //                     console.log(this.delivery.orderNumber, ' this.delivery.orderNumber')
+  //                     console.log(this.delivery.quantity, ' this.delivery.quantity')
+  //                     this.delivery.uOM = this.uniquelineitems[a].UNITOFMEASURE;
+
+  //                     this.delivery.contactPersonPhone = this.uniquelineitems[a].CONTACTPERSONPHONE;
+  //                     // this.delivery.vendorID = this.uniquelineitems[a].vendorId;
+  //                     this.delivery.vendorID = this.vendorid
+  //                     this.delivery.company = this.uniquelineitems[a].COMPANY
+  //                     this.delivery.plant = this.uniquelineitems[a].PLANT
+  //                     this.delivery.department = this.uniquelineitems[a].DEPARTMENT
+  //                     this.delivery.storagelocation = this.uniquelineitems[a].STORAGELOCATION
+  //                     this.delivery.costCentre = this.uniquelineitems[a].COSTCENTRE
+  //                     this.delivery.category = this.uniquelineitems[a].CATEGORY
+
+
+  //                     this.delivery.profileID = ""
+  //                     this.delivery.invoiceDocumentPath = ""
+  //                     this.delivery.iGSTAmount = ""
+  //                     this.delivery.cGSTAmount = ""
+  //                     this.delivery.sgstAmount = ""
+  //                     this.delivery.servicenumber = this.uniquelineitems[a].SERVICENUMBER;
+  //                     // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
+  //                     console.log("============>", this.grntobeinvoicelist);
+
+  //                     if (this.tobeinvoiced == false) {
+  //                       this.delivery.grnnumber = "-";
+  //                       this.delivery.uniquereferencenumber = "-";
+  //                       this.delivery.saplineitemnumber = "-";
+  //                       this.delivery.srcnnumber = "-";
+  //                     }
+  //                     else {
+  //                       this.delivery.servicenumber = this.uniquelineitems[a].SERVICENUMBER;
+  //                       this.delivery.dcnumber = this.uniquelineitems[a].DCNUMBER
+  //                       console.log(" this.delivery.dcnumber======>", this.delivery.dcnumber);
+  //                       if (this.uniquelineitems[a].SRCNUMBER != null) {
+  //                         this.delivery.srcnnumber = this.uniquelineitems[a].SRCNUMBER;
+  //                       }
+  //                       else {
+  //                         this.delivery.srcnnumber = "-";
+  //                       }
+
+  //                       this.delivery.grnnumber = this.uniquelineitems[a].GRNMAPPNUMBER;
+  //                       this.delivery.uniquereferencenumber = this.uniquelineitems[a].SAPUNIQUEREFERENCENO;
+  //                       this.delivery.saplineitemnumber = this.uniquelineitems[a].SAPLINEITEMNO;
+  //                     }
+
+  //                     // this.delivery.totalAmount = itemAmount;
+  //                     this.delivery.totalAmount = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '');
+  //                     this.delivery.description = this.invoiceForm.controls['description'].value;
+  //                     this.delivery.remark = this.invoiceForm.controls['remarks'].value;
+  //                     this.delivery.totalamtinctaxes = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '')
+  //                     this.delivery.taxamount = (this.invoiceForm.controls['taxAmount'].value).toString().replace(/,/g, '')
+  //                     this.delivery.status = "P"
+
+
+  //                     if (this.invoicefilechanged == false) {
+
+  //                       if (this.TypeNo == 'resubmit') {
+  //                         this.delivery.actualfilename = this.actualresubmitfilename;
+  //                         this.delivery.savedfilename = this.savedresubmitfilename;
+  //                       }
+  //                       else {
+  //                         this.delivery.actualfilename = this.actualfilenameofwopo;
+  //                         this.delivery.savedfilename = this.savedfilenameofwopo;
+  //                       }
+
+  //                     }
+  //                     else {
+  //                       this.delivery.actualfilename = this.actualfilename;
+  //                       this.delivery.savedfilename = this.savedfilename;
+  //                     }
+
+  //                     this.delivery.material = this.uniquelineitems[a].MATERIAL;
+  //                     this.delivery.createdby = sessionStorage.getItem("loginUser");
+  //                     this.delivery.managerid = "sachin.kale@timesgroup.com";
+  //                     if (this.invoiceForm.controls['billofladingdate'].value != null) {
+  //                       this.delivery.billofladingdate = moment(new Date(this.invoiceForm.controls['billofladingdate'].value)).format("DD/MM/YYYY");
+
+  //                     }
+  //                     else {
+  //                       this.delivery.billofladingdate = "Invalid date";
+  //                     }
+  //                     console.log("this.delivery.billofladingdate " + this.delivery.billofladingdate);
+  //                     // return;
+  //                     // this.invoiceForm.controls['billofladingdate'].value;
+
+  //                     this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY);
+  //                     console.log("a is here " + a);
+  //                     console.log("this.uniquelineitems[a].BALANCE_QTY is here " + this.uniquelineitems[a].BALANCE_QTY);
+  //                     if (this.grntobeinvoicelist.length == 0) {
+  //                       if (this.part || this.TypeNo == 'resubmit') {
+  //                         this.delivery.invoiceamount = this.invoiceForm.controls['calRealtime' + a].value;
+  //                       }
+  //                       else if (this.full) {
+  //                         this.delivery.invoiceamount = this.uniquelineitems[a].INVAMOUNT;
+  //                       }
+  //                     }
+  //                     else {
+  //                       this.delivery.invoiceamount = this.uniquelineitems[a].INVAMOUNT;
+
+  //                     }
+
+  //                     this.delivery.multiplesavedfilename = "";
+  //                     this.delivery.multipleactualfilename = "";
+
+  //                     if (this.multiplefilechanged == true) {
+  //                       for (var c = 0; c < this.ArrayOfSelectedFilename.length; c++) {
+  //                         this.delivery.multipleactualfilename = this.delivery.multipleactualfilename + this.ArrayOfSelectedFilename[c] + ",";
+  //                       }
+  //                       for (var x = 0; x < this.ArrayOfSelectedSavedFile.length; x++) {
+  //                         this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename + this.ArrayOfSelectedSavedFile[x] + ",";
+  //                       }
+  //                       this.delivery.multipleactualfilename = this.delivery.multipleactualfilename.slice(0, -1);
+  //                       this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename.slice(0, -1);
+  //                       console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
+  //                       console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
+
+  //                     }
+  //                     else {
+  //                       if (sessionStorage.getItem("invwopodetails")) {
+  //                         this.delivery.multipleactualfilename = this.withoutpodetails[0].SUPPORTACTFILENAME;
+  //                         this.delivery.multiplesavedfilename = this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
+
+  //                       }
+  //                       else if (this.TypeNo == 'resubmit') {
+  //                         this.delivery.multipleactualfilename = this.invoicedata[0].MULTIACTUALFILENAME;
+  //                         this.delivery.multiplesavedfilename = this.invoicedata[0].MULTISAVEDFILENAME;
+  //                       }
+  //                       else {
+  //                         this.delivery.multipleactualfilename = "";
+  //                         this.delivery.multiplesavedfilename = "";
+  //                       }
+
+  //                     }
+  //                     console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
+  //                     console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
+
+  //                     // this.delivery.multipleactualfilename=null;
+  //                     // this.delivery.multiplesavedfilename=null;
+  //                     // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
+  //                     // this.delivery.modified_by = sessionStorage.getItem("loginUser");
+  //                     // for(var j=0;j<this.uniquelineitem.length;j++)
+  //                     // {
+  //                     //   if(this.uniquelineitem[j].PONUMBER == this.uniquelineitems[a].PO_NUMBER)
+  //                     //   {
+  //                     //     delivery.buyerid = this.uniquelineitem[j].BUYER;
+  //                     //   }
+  //                     // }
+  //                     // delivery.buyerid = "sachin.mehta@timesgroup.com"
+
+  //                     this.delivery.stage = "1"
+  //                     console.log("this.delivery ==>", this.delivery.balance_qty);
+  //                     this.invoicesubmissionarray.push(this.delivery);
+  //                     console.log("this.invoicesubmissionarray ==>", this.invoicesubmissionarray);
+  //                   }
+
+  //                 }
+  //               }
+  //               else {
+  //                 console.log("in else" + count);
+
+  //                 if (this.uniquelineitems[a].TOINVOICELINEITEMNUMBER == this.orderlineitems[b].LINEITEMNUMBER
+  //                   && this.uniquelineitems[a].order == this.orderlineitems[b].DC) {
+
+
+  //                   console.log("count is here " + count)
+  //                   var quantity = this.orderlineitems[b].QUANTITY
+  //                   var itemAmount = this.orderlineitems[b].AMOUNT
+  //                   console.log("quantity " + quantity);
+  //                   // if (quantity > 0) {
+  //                   this.delivery = new Delivery();
+  //                   console.log("a is not empty ==>" + a);
+  //                   this.delivery.bid = sessionStorage.getItem("Bid");
+  //                   this.delivery.po_num = this.ponumber;
+  //                   if (this.invoice != true) {
+  //                     console.log("this.invoiceForm.controls['irnNo'].value;", this.invoiceForm.controls['irnNo'].value)
+  //                     this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+  //                     console.log("test date===========>", this.invoiceForm.controls['irnDate'].value);
+
+  //                     this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+
+  //                   }
+  //                   else {
+  //                     this.delivery.irnNumber = "";
+  //                     if (this.invoiceForm.controls['irnDate'].value == null || this.invoiceForm.controls['irnDate'].value == "") {
+  //                       this.delivery.irnDate = null;
+  //                     }
+  //                   }
+  //                   // this.delivery.irnNumber = this.invoiceForm.controls['irnNo'].value;
+  //                   // this.delivery.irnDate = moment(new Date(this.invoiceForm.controls['irnDate'].value)).format("DD/MM/YYYY");
+  //                   this.delivery.invoiceNumber = this.invoiceForm.controls['invoiceNo'].value.trim();
+
+  //                   this.delivery.invoiceDate = moment(new Date(this.invoiceForm.controls['invoiceDate'].value)).format("DD/MM/YYYY");
+  //                   console.log("this.delivery.invoiceDate " + this.delivery.invoiceDate);
+  //                   // this.delivery.referenceNumber = ""
+  //                   // this.delivery.grnnumber = ""
+  //                   this.delivery.rateperquantity = this.grnuniquelineitems[a].TOINVOICERATEPERQTY.replace(/,/g, '');
+
+  //                   this.delivery.lineItemNumber = this.grnuniquelineitems[a].TOINVOICELINEITEMNUMBER;
+  //                   this.delivery.lineitemtext = this.grnuniquelineitems[a].TOINVOICELINEITEMTEXT;
+  //                   this.delivery.orderNumber = this.orderlineitems[b].DC;
+  //                   if (this.TypeNo == 'resubmit') {
+  //                     this.delivery.beforesubmissioninvoicenumber = this.invNo;
+  //                     this.delivery.businessPartnerText = this.invoicedata[0].BUSSINESSPARTNERTEXT;
+  //                     this.delivery.contactPerson = this.invoicedata[0].REQUSITIONER;
+  //                     this.delivery.buyerid = this.invoicedata[0].BUYER;
+
+  //                     console.log("Hello========>", this.invoicedata[0].BUSSINESSPARTNERTEXT, this.invoicedata[0].REQUSITIONER,
+  //                       this.invoicedata[0].BUYER
+  //                     );
+
+  //                   } else {
+  //                     this.delivery.beforesubmissioninvoicenumber = "";
+  //                     this.delivery.businessPartnerText = sessionStorage.getItem("Bussinesspartnertext");
+  //                     this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
+  //                     this.delivery.buyerid = sessionStorage.getItem("Buyer");
+  //                   }
+  //                   // this.delivery.orderNumber = this.orderlineitems[b].DcNo;
+  //                   console.log(this.delivery.orderNumber, 'this.delivery.orderNumber')
+  //                   // this.delivery.quantity = quantity;
+  //                   this.delivery.quantity = this.orderlineitems[b].QUANTITY;
+  //                   console.log(this.delivery.orderNumber, ' this.delivery.orderNumber')
+  //                   console.log(this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE, ' this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE')
+  //                   this.delivery.uOM = this.grnuniquelineitems[a].TOINVOICEUNITOFMEASURE;
+  //                   this.delivery.contactPersonPhone = this.grnuniquelineitems[a].TOINVOICECONTACTPERSONPHONE;
+  //                   this.delivery.company = this.grnuniquelineitems[a].TOINVOICECOMPANY
+  //                   this.delivery.plant = this.grnuniquelineitems[a].TOINVOICEPLANT
+  //                   this.delivery.department = this.grnuniquelineitems[a].TOINVOICEDEPARTMENT
+  //                   this.delivery.storagelocation = this.grnuniquelineitems[a].TOINVOICESTORAGELOCATION
+  //                   this.delivery.costCentre = this.grnuniquelineitems[a].TOINVOICECOSTCENTRE
+  //                   this.delivery.category = this.grnuniquelineitems[a].TOINVOICECATEGORY
+
+  //                   this.delivery.vendorID = this.vendorid
+  //                   this.delivery.profileID = ""
+  //                   this.delivery.invoiceDocumentPath = ""
+  //                   this.delivery.iGSTAmount = ""
+  //                   this.delivery.cGSTAmount = ""
+  //                   this.delivery.sgstAmount = ""
+  //                   // this.delivery.uniquereferencenumber = this.uniquereferencenumber;
+  //                   console.log("============>", this.grntobeinvoicelist);
+
+  //                   // if (this.tobeinvoiced == false) {
+  //                   //   this.delivery.grnnumber = "-";
+  //                   //   this.delivery.uniquereferencenumber = "-";
+  //                   //   this.delivery.saplineitemnumber = "-";
+  //                   //   this.delivery.srcnnumber = "-";
+  //                   // }
+  //                   // else {
+  //                   this.delivery.servicenumber = this.grnuniquelineitems[a].SERVICENUMBER;
+  //                   this.delivery.dcnumber = this.grnuniquelineitems[a].DCNUMBER
+  //                   console.log(" this.delivery.dcnumber======>", this.delivery.dcnumber);
+  //                   if (this.grnuniquelineitems[a].SRCNUMBER != null) {
+  //                     this.delivery.srcnnumber = this.grnuniquelineitems[a].SRCNUMBER;
+  //                   }
+  //                   else {
+  //                     this.delivery.srcnnumber = "-";
+  //                   }
+
+  //                   this.delivery.grnnumber = this.grnuniquelineitems[a].GRNMAPPNUMBER;
+  //                   this.delivery.uniquereferencenumber = this.grnuniquelineitems[a].SAPUNIQUEREFERENCENO;
+  //                   this.delivery.saplineitemnumber = this.grnuniquelineitems[a].SAPLINEITEMNO;
+  //                   // }
+
+  //                   // this.delivery.totalAmount = itemAmount;
+  //                   this.delivery.totalAmount = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '');
+  //                   this.delivery.description = this.invoiceForm.controls['description'].value;
+  //                   this.delivery.remark = this.invoiceForm.controls['remarks'].value;
+  //                   this.delivery.totalamtinctaxes = (this.invoiceForm.controls['TotalinctaxAmount'].value).toString().replace(/,/g, '')
+  //                   this.delivery.taxamount = (this.invoiceForm.controls['taxAmount'].value).toString().replace(/,/g, '')
+  //                   this.delivery.status = "P"
+
+
+  //                   if (this.invoicefilechanged == false) {
+
+  //                     if (this.TypeNo == 'resubmit') {
+  //                       this.delivery.actualfilename = this.actualresubmitfilename;
+  //                       this.delivery.savedfilename = this.savedresubmitfilename;
+  //                     }
+  //                     else {
+  //                       this.delivery.actualfilename = this.actualfilenameofwopo;
+  //                       this.delivery.savedfilename = this.savedfilenameofwopo;
+  //                     }
+
+  //                   }
+  //                   else {
+  //                     this.delivery.actualfilename = this.actualfilename;
+  //                     this.delivery.savedfilename = this.savedfilename;
+  //                   }
+
+  //                   this.delivery.material = this.grnuniquelineitems[a].TOINVOICEMATERIAL;
+  //                   this.delivery.createdby = sessionStorage.getItem("loginUser");
+  //                   this.delivery.managerid = "sachin.kale@timesgroup.com";
+  //                   if (this.invoiceForm.controls['billofladingdate'].value != null) {
+  //                     this.delivery.billofladingdate = moment(new Date(this.invoiceForm.controls['billofladingdate'].value)).format("DD/MM/YYYY");
+
+  //                   }
+  //                   else {
+  //                     this.delivery.billofladingdate = "Invalid date";
+  //                   }
+  //                   console.log("this.delivery.billofladingdate " + this.delivery.billofladingdate);
+  //                   // return;
+  //                   // this.invoiceForm.controls['billofladingdate'].value;
+
+  //                   this.delivery.balance_qty = Number(this.grnuniquelineitems[a].BALANCE_QTY);
+  //                   this.delivery.invoiceamount = this.grnuniquelineitems[a].TOINVOICETOTALAMOUNT;
+
+
+  //                   this.delivery.multiplesavedfilename = "";
+  //                   this.delivery.multipleactualfilename = "";
+
+  //                   if (this.multiplefilechanged == true) {
+  //                     for (var c = 0; c < this.ArrayOfSelectedFilename.length; c++) {
+  //                       this.delivery.multipleactualfilename = this.delivery.multipleactualfilename + this.ArrayOfSelectedFilename[c] + ",";
+  //                     }
+  //                     for (var x = 0; x < this.ArrayOfSelectedSavedFile.length; x++) {
+  //                       this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename + this.ArrayOfSelectedSavedFile[x] + ",";
+  //                     }
+  //                     this.delivery.multipleactualfilename = this.delivery.multipleactualfilename.slice(0, -1);
+  //                     this.delivery.multiplesavedfilename = this.delivery.multiplesavedfilename.slice(0, -1);
+  //                     console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
+  //                     console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
+
+  //                   }
+  //                   else {
+  //                     if (sessionStorage.getItem("invwopodetails")) {
+  //                       this.delivery.multipleactualfilename = this.withoutpodetails[0].SUPPORTACTFILENAME;
+  //                       this.delivery.multiplesavedfilename = this.withoutpodetails[0].SUPPORTSAVEDFILENAME;
+
+  //                     }
+  //                     else if (this.TypeNo == 'resubmit') {
+  //                       this.delivery.multipleactualfilename = this.invoicedata[0].MULTIACTUALFILENAME;
+  //                       this.delivery.multiplesavedfilename = this.invoicedata[0].MULTISAVEDFILENAME;
+  //                     }
+  //                     else {
+  //                       this.delivery.multipleactualfilename = "";
+  //                       this.delivery.multiplesavedfilename = "";
+  //                     }
+
+  //                   }
+  //                   console.log("this.delivery.multipleactualfilename ", this.delivery.multipleactualfilename);
+  //                   console.log("this.delivery.multiplesavedfilename ", this.delivery.multiplesavedfilename);
+
+  //                   // this.delivery.multipleactualfilename=null;
+  //                   // this.delivery.multiplesavedfilename=null;
+  //                   // this.delivery.balance_qty = Number(this.uniquelineitems[a].BALANCE_QTY) - Number(quantity)
+  //                   // this.delivery.modified_by = sessionStorage.getItem("loginUser");
+  //                   // for(var j=0;j<this.uniquelineitem.length;j++)
+  //                   // {
+  //                   //   if(this.uniquelineitem[j].PONUMBER == this.uniquelineitems[a].PO_NUMBER)
+  //                   //   {
+  //                   //     delivery.buyerid = this.uniquelineitem[j].BUYER;
+  //                   //   }
+  //                   // }
+  //                   // delivery.buyerid = "sachin.mehta@timesgroup.com"
+
+  //                   this.delivery.stage = "1"
+  //                   console.log("this.delivery ==>", this.delivery.balance_qty);
+  //                   this.invoicesubmissionarray.push(this.delivery);
+  //                   console.log("this.invoicesubmissionarray ==>", this.invoicesubmissionarray);
+  //                   // }
+
+  //                 }
+  //                 count++;
+  //               }
+
+
+
+
+
+  //             }
+
+  //           }
+
+  //           // this.loaderservice.hide()
+  //           // return false
+  //           // this.delivery.actualfilename = null
+  //           this.purchaseOrderListService.sendEmaildemo(this.invoicesubmissionarray).subscribe(res => {
+  //             sessionStorage.removeItem("invwopodetails");
+  //             if (res[0].message == "Success") {
+
+  //               this.purchaseOrderListService.removeEmptyDeliveries(this.ponumber, this.nullDCN).subscribe(res => {
+  //                 if (res[0].message == "Success") {
+
+
+
+  //                   this.loaderservice.hide();
+  //                   // this.dialogBox.popUpOpen2('Invoice has been submitted successfully', 'success', 'invoicesubmit');
+  //                   const dialogConfig = new MatDialogConfig();
+  //                   dialogConfig.data = {
+  //                     message: 'Invoice has been submitted successfully',
+  //                     condition: 'success',
+  //                     page: 'invoicesubmit'
+  //                   };
+  //                   const mydata = dialogConfig.data;
+  //                   console.log("PopupComponent", mydata);
+
+  //                   const dialogRef = this.dialog.open(PopupComponent, {
+  //                     panelClass: 'custom-modalbox',
+
+  //                     width: '400px',
+  //                     data: { datakey: dialogConfig.data }
+
+  //                   });
+  //                   dialogRef.afterClosed().subscribe(result => {
+  //                     console.log(`Dialog result1: ${result}`);
+  //                     this.router.navigate(['/trackInvoiceList']);
+  //                   });
+  //                 }
+  //               });
+  //               // sessionStorage.removeItem("invAllDetails");
+  //               // sessionStorage.removeItem("invsubmissionorderDetails");
+  //               // sessionStorage.removeItem("invsubmissionDetails");
+  //               // this.dialogBox.popUpOpen2('Invoice has been submitted successfully','success','invoicesubmit');
+  //               // this.toastr.success("Invoice Has Been Submitted Successfully")
+  //               console.log("Inin");
+  //               this.invoiceForm.reset();
+  //               // this.invoiceconfile = null;
+  //               this.viewAttachmentName = "";
+  //               this.successmessage = "Invoice Has Been Submitted Successfully";
+  //               this.success = true;
+  //               // this.showPopup();
+  //             }
+  //             else {
+  //               this.loaderservice.hide();
+  //               // this.dialogBox.popUpOpen2('Invoice Number Already Exist.', 'error', 'invoicesubmit');
+  //               const dialogConfig = new MatDialogConfig();
+  //               dialogConfig.data = {
+  //                 message: res[0].Uniquemessage,
+  //                 // message: 'Invoice Number Already Exist.',
+  //                 condition: 'error',
+  //                 page: 'invoicesubmit',
+  //                 specific:'note'
+  //               };
+  //               const mydata = dialogConfig.data;
+  //               console.log("PopupComponent", mydata);
+
+  //               const dialogRef = this.dialog.open(PopupComponent, {
+  //                 panelClass: 'custom-modalbox',
+
+  //                 width: '400px',
+  //                 data: { datakey: dialogConfig.data }
+
+  //               });
+  //               dialogRef.afterClosed().subscribe(result => {
+  //                 console.log(`Dialog result1: ${result}`);
+  //               });
+  //               // this.toastr.error(res[0].message)
+  //               // this.dialogBox.popUpOpen2('Error while submitting. Please try again','error','invoicesubmit');
+  //               this.successmessage = res[0].Uniquemessage;
+  //               this.error = true;
+  //               // this.showPopup();
+  //             }
+  //             this.loaderservice.hide();
+  //           });
+  //           // this.loaderservice.hide();
+  //           // }
+  //         })
+  //         // this.loaderservice.hide();
+  //         // console.log("autodc===========>",dcnlist);
+  //       }
+
+
+  //     });
+  //   }
+  //     // else {
+  //     //   // this.toastr.error(res[0].message)
+  //     //   this.dialogBox.popUpOpen2('Invoice Number is Already Exist.', 'error', 'invoicesubmit');
+  //     //   this.successmessage = "Invoice Number is Already Exist.";
+  //     //   this.error = true;
+  //     //   // this.showPopup();
+  //     //   //=-- this.dialogBox.popUpOpen2('Maximum file size (10 MB) exceeded.', 'donate', 'error2');
+  //     //   this.loaderservice.hide();
+  //     //   return false;
+  //     // }
+
+  //     // });
+  //     // err => {
+  //     //   // this.toastr.error(err)
+  //     //   this.successmessage = err;
+  //     //   this.error = true;
+  //     //   // this.showPopup();
+  //     //   this.dialogBox.popUpOpen2('There was an error while uploading the file. Please try again!', 'error', 'invoicesubmit');
+  //     //   // =--this.dialogBox.popUpOpen2('There was an error while uploading the file. Please try again!', 'donate', 'error2');
+  //     //   this.loaderservice.hide();
+  //     //   return false;
+  //     // }
+  //   }
+  //   else {
+  //     //=--this.dialogBox.popUpOpen2('Please upload the File', 'leave', 'error2');
+  //     // this.dialogBox.popUpOpen2('Please upload the File', 'error', 'invoicesubmit');
+  //     const dialogConfig = new MatDialogConfig();
+  //     dialogConfig.data = {
+  //       message: 'Please upload the File',
+  //       condition: 'error',
+  //       page: 'invoicesubmit'
+  //     };
+  //     const mydata = dialogConfig.data;
+  //     console.log("PopupComponent", mydata);
+
+  //     const dialogRef = this.dialog.open(PopupComponent, {
+  //       panelClass: 'custom-modalbox',
+
+  //       width: '400px',
+  //       data: { datakey: dialogConfig.data }
+
+  //     });
+  //     dialogRef.afterClosed().subscribe(result => {
+  //       console.log(`Dialog result1: ${result}`);
+  //     });
+
+
+  //     this.loaderservice.hide();
+  //     return false;
+  //   }
+
+
+  // }
 
   close() {
     this.viewAttachmentName = '';

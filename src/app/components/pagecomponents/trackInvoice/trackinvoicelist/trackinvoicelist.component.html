@@ -277,7 +277,8 @@
                                         
                                     </span>
                                     <p class="status-title status-link">Returned
-                                        <span class="badgeNum">{{invoiceCountAsPerStatus?.V != null ? invoiceCountAsPerStatus?.V : 0}}</span>
+                                        <span class="badgeNum">{{ReturnPo}}</span>
+                                        <!--span class="badgeNum">{{invoiceCountAsPerStatus?.V != null ? invoiceCountAsPerStatus?.V : 0}}</span-->
                                     </p>
                                 </div>
                                 <div class="inv-wrapper" (click)="sortdata('O')">
@@ -455,11 +456,11 @@
                                             Resubmit
                                         </div>
                                     </th>
-                                    <!-- <th scope="col" class="text-left">
+                                     <th scope="col" class="text-left">
                                         <div>
-                                            Info
+                                            Reopen
                                         </div>
-                                    </th> -->
+                                    </th> 
 
                                 </tr>
                                 <tr *ngIf="disableoff==true">
@@ -654,8 +655,28 @@
                                             --
                                         </div>
                                     </td>
+
+                                    
+
                                     <td>
+
+                                
                                         <div class="InfofixedPOnumber text-left " *ngIf="historic=='false'">
+
+                                              <!--reopen td strated-->
+  <div class="text-left ">
+    <div class="commentDiv ">
+        <div class="commentIcon " style="cursor: pointer; "
+            *ngIf="invData.STATUS =='RO'"
+            (click)="reopenInvoice(invData.INVOICENUMBER,invData.PO_NUMBER,invData.VENDORID,'reopen',invData.ALLPO,invData.PLANT,invData.invoiceDate)">
+            <img src="./assets/img/reopen.webp "
+                style="max-width: 38px; cursor: pointer; margin-left: 5px;" />
+        </div>
+    </div>
+</div>
+
+<!--reopen td end-->
+
                                             <!-- <div *ngIf="(disableoff==true) && (!invData.POINVOICENUMBER) ">
                                                 --
                                             </div> -->

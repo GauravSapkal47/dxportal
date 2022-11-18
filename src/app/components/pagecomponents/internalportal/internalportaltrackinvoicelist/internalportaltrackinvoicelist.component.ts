@@ -35,6 +35,7 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
     paymentStatus: new FormControl(''),
     Topicker: new FormControl('')
   })
+  statusTemplate1: boolean = true;
   confirmationNoAction: boolean;
   invoicedetailsList: any = [];
   specificemailid: string;
@@ -173,6 +174,7 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
   extensionType: any;
   invoiceCountAsPerStatus: any = [];
   pendingPo: number = 0;
+  ReturnPo :any=0;
   spliceCount: number = 0;
   enduserReturnArray: any = [];
   invoicedataofinvoice: any = [];
@@ -310,6 +312,9 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
               this.pendingPo = 0;
             }else{
               this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
+            }
+            if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+              this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
             }
           }
       if (res[0].message == "Success") {
@@ -1232,6 +1237,9 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
         }else{
           this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
         }
+        if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+          this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
+        }
       }
       console.log(this.invoicedetailsList, ' this.invoicedetailsList')
       // for (let b = 0; b < this.invoicedetailsList.length; b++) {
@@ -1611,6 +1619,9 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
           }else{
             this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
           }
+          if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+            this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
+          }
         }
         if (res[0].message == "Success") {
           this.invoicedetailsList = res[0].invoicedetails;
@@ -1916,6 +1927,9 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
           }else{
             this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
           }
+          if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+            this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
+          }
         }
         if (res[0].message == "Success") {
           //  if(this.pgNolist.length==0)
@@ -2061,6 +2075,9 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
             this.pendingPo = 0;
           }else{
             this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
+          }
+          if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+            this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
           }
         }
         if (res[0].message == "Success") {
@@ -2501,6 +2518,9 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
           this.pendingPo = 0;
         }else{
           this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
+        }
+        if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+          this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
         }
       }
       if (res[0].message == "Success") {
@@ -3420,8 +3440,22 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
 
   }
 
+  ResetData() {
+    this.invoiceList.reset();
+    this.invoiceList.controls.POrealNumber.setValue("");
+    this.invoiceList.controls.InvoiceNumber.setValue("");
+    this.invoiceList.controls.fromDate.setValue("");
+    this.invoiceList.controls.toDate.setValue("");
+    this.invoiceList.controls.Plant.setValue("");
+    this.invoiceList.controls.Vendor.setValue('');
+    
+    this.todateerror = false;
+    this.disable = false;
+  }
+
   reassign(k, INVOICENUMBER,
     PONUMBER, specificemailid, ENDUSERStatus, ManagerStatus) {
+      // debugger;
     this.reassigninvoicenumber = INVOICENUMBER;
     this.reassignponumber = PONUMBER;
     this.reassignspecificemailid = specificemailid;
@@ -3509,6 +3543,9 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
           this.pendingPo = 0;
         }else{
           this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
+        }
+        if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+          this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
         }
       }
       if (res[0].message == "Success") {
@@ -4324,6 +4361,15 @@ export class InternalportaltrackinvoicelistComponent implements OnInit {
       console.log(this.vendorList, 'vendorList')
     });
   }
+
+  // ***************************Tooltip 07/10/2022***********************************
+onMouseEnter() {
+  this.statusTemplate1 = true;
+}
+onClick() {
+  this.statusTemplate1 = false; 
+}
+// ***************************Tooltip 07/10/2022 End***********************************
 
   checklength(type)
   {

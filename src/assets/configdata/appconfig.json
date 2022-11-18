@@ -1,7 +1,7 @@
 {
     
-    "baseURL": "https://partnerdx.timesgroup.com/DxProject",
+    "baseURL": "http://localhost:8080/DxProject",
 
-    "headerDisplay": "prod" 
+    "headerDisplay": "dev" 
 
 }

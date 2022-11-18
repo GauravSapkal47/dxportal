@@ -110,6 +110,7 @@ export class BuyertrackinvoicelistComponent implements OnInit {
   extensionType: any;
   invoiceCountAsPerStatus:any=[];
   pendingPo :number = 0;
+  ReturnPo :any=0;
   pCount :number = 0;
   mCount:number = 0;
   remarklength: number = 160;
@@ -251,6 +252,9 @@ if(data1.emailId !=null && data1.emailId !="" && data1.page=="viewinvoices")
           this.pendingPo = 0;
         }else{
           this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
+        }
+        if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+          this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
         }
       }
       if (res[0].message ==  "Success") {
@@ -979,6 +983,9 @@ if(data1.emailId !=null && data1.emailId !="" && data1.page=="viewinvoices")
         }else{
           this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
         }
+        if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+          this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
+        }
       }
       if (res[0].message == "Success") {
         // this.loaderservice.show();
@@ -1277,6 +1284,9 @@ if(data1.emailId !=null && data1.emailId !="" && data1.page=="viewinvoices")
           }else{
             this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
           }
+          if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+            this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
+          }
         }
         if (res[0].message == "Success") {
           this.invoiceDataList = res[0].invoiceData;
@@ -1355,6 +1365,9 @@ if(data1.emailId !=null && data1.emailId !="" && data1.page=="viewinvoices")
           this.pendingPo = 0;
         }else{
           this.pendingPo =  Number(this.invoiceCountAsPerStatus.P) + Number(this.invoiceCountAsPerStatus.M);
+        }
+        if( this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)){
+          this.ReturnPo =  Number(this.invoiceCountAsPerStatus.V) + Number(this.invoiceCountAsPerStatus.RO)
         }
       }
         if (res[0].message== "Success") {

@@ -4,7 +4,7 @@
             <div class="formWrapper">
                 <div class="">
                     <div class="formWrapper__box">
-                        <div class="formWrapper__heading" *ngIf="TypeNo != 'part' && TypeNo != 'resubmit'">
+                        <div class="formWrapper__heading" *ngIf="TypeNo != 'part' && TypeNo != 'resubmit'  && TypeNo != 'reopen' ">
                             <!-- <div class="formWrapperHead_img" [routerLink]="['/purchaseOrdersList']"> -->
                                 <div class="formWrapperHead_img" [routerLink]="['/purchaseOrdersList']">
                                 <img src="./assets/img/arrow_icon_grey_prev.png" class="left-arrow">
@@ -24,6 +24,14 @@
                                 <div class="formWrapperHead_img" [routerLink]="['/purchaseOrdersList']">
                                 <img src="./assets/img/arrow_icon_grey_prev.png" class="left-arrow">
                             </div> PO No : {{ponumber}} - Part Invoice
+                            <div class="error" style="margin: auto;" *ngIf="totalBalQty==0"> {{errormessage}}</div>
+                        </div>
+
+                        <div class="formWrapper__heading" *ngIf="TypeNo == 'reopen'">
+                            <!-- <div class="formWrapperHead_img" [routerLink]="['/purchaseOrdersList']"> -->
+                            <div class="formWrapperHead_img" [routerLink]="['/purchaseOrdersList']">
+                                <img src="./assets/img/arrow_icon_grey_prev.png" class="left-arrow">
+                            </div> PO No : {{ponumber}} - Reopened for correction
                             <div class="error" style="margin: auto;" *ngIf="totalBalQty==0"> {{errormessage}}</div>
                         </div>
                         <!-- <div *ngIf = "nogrnpresnt == true"> -->
@@ -306,7 +314,7 @@
 
                                                     </mat-form-field>
                                                 </div>
-                                                <div class="invInputWicon" *ngIf="freshinvoice==false">
+                                                <div class="invInputWicon" *ngIf="freshinvoice==false && reopen==true">
                                                     <mat-form-field appearance="none"
                                                         style="background-color: #e9ecef;">
                                                         <mat-label>Bill Of Lading Date </mat-label>

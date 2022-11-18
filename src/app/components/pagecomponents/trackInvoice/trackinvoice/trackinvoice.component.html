@@ -39,6 +39,17 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="trackInvStatus__single" *ngIf="return == true">
+                                <div class="trackInvStatus__content">
+                                    <div class="InvStatus">
+                                        <span class="statusBox st-returned"></span>
+                                        <span class="statusBox__title">Reopen</span>
+                                    </div>
+                                    <div class="InvStatus__date">
+                                        <span>{{returntime}}</span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="trackInvStatus__single" *ngIf="resubmit == true">
                                 <div class="trackInvStatus__content">
                                     <div class="InvStatus">
