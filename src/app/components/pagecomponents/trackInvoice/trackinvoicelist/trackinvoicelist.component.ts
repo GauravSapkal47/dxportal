@@ -130,7 +130,11 @@ export class TrackInvoiceListComponent implements OnInit {
   pendingPo :any = 0;
   ReturnPo :any=0;
   remarklength: number = 160;
-
+  previouspono:any;
+  previousdate:any;
+  previousinvno:any;
+  previousfilename:any;
+  //reopen :boolean=
   constructor(public dialog: MatDialog, private router: Router, private route: ActivatedRoute, private purchaseOrderListService: PurchaseOrderListService,
     private trackOrderListService: TrackOrderListService, private toastr: ToastrService,
     private loaderservice: LoaderService) { }
@@ -1972,133 +1976,243 @@ console.log("mpo "+mpo);
             poNo: btoa(poNo)
 
           }
-
         })
+    }
+  }
+
+  // reopenInvoice(invNo, poNo, vendorid, type,mpo,planttype,invoiceDate) {
+  //   console.log(type);
+    
+  //       if (this.invoicenumber != undefined) {
+    
+  //         this.purchaseOrderListService.getwopodetails(this.invoicenumber).subscribe(res => {
+    
+  //           console.log("res is here ", res);
+    
+  //           // this.wopodata = res[0].data;
+    
+  //           // if (res[0].message == "Success") {
+    
+  //           //   console.log("res[0].data ==>", this.wopodata);
+    
+  //           //   sessionStorage.removeItem("invwopodetails");
+    
+  //           //   sessionStorage.setItem("invwopodetails", JSON.stringify(this.wopodata));
+    
+  //           // }
+    
+  //           // this.router.navigate(["invoicesubmission"]
+  //   console.log("mpo "+mpo);
+  //           if(mpo != null)
+    
+  //           {
+    
+  //             this.router.navigate(["invoicesimpo"]
+    
+  //             , {
+    
+  //               queryParams: {
+    
+  //                 type: btoa(type),
+    
+  //                 vd: btoa(vendorid),
+    
+  //                 invNo: btoa(invNo),
+    
+  //                 poNo: btoa(poNo),
+    
+  //                 mpo: btoa(mpo),
+    
+  //                 planttype: btoa(planttype),
+    
+  //                 invoiceDate: btoa(invoiceDate)
+    
+  //               }
+    
+  //             })
+    
+  //           }
+    
+  //           else
+    
+  //           {
+    
+  //             this.router.navigate(["invoicesubmission"]
+    
+  //             , {
+    
+  //               queryParams: {
+    
+  //                 type: btoa(type),
+    
+  //                 vd: btoa(vendorid),
+    
+  //                 invNo: btoa(invNo),
+    
+  //                 poNo: btoa(poNo),
+  //                 invoiceDate: btoa(invoiceDate)
+    
+  //               }
+    
+  //             })
+    
+  //           }
+    
+         
+    
+  //         });
+    
+    
+    
+  //       }
+    
+  //       else {
+    
+  //         // this.router.navigate(["invoicesubmission"]
+    
+  //         this.router.navigate(["invoicesubmission"]
+    
+  //           , {
+    
+  //             queryParams: {
+    
+  //               type: btoa(type),
+    
+  //               vd: btoa(vendorid),
+    
+  //               invNo: btoa(invNo),
+    
+  //               poNo: btoa(poNo),
+  //               invoiceDate: btoa(invoiceDate)
+    
+  //             }
+    
+  //           })
+    
+    
+    
+  //       }
+    
+    
+    
+  //     }
+
+  reopenInvoice(invNo, poNo, vendorid, type,mpo,invoiceDate,filename) {
+
+   this.previouspono= poNo;
+           sessionStorage.setItem("previouspono", this.previouspono)
+    this.previousdate= "18/11/2022" //invoiceDate
+    localStorage.setItem("previousdate", this.previousdate)
+    this.previousinvno = invNo;
+    sessionStorage.setItem("previousinvno", this.previousinvno)
+    this.previousfilename= filename
+    sessionStorage.setItem("previousfilename", this.previousfilename)
+    if (this.invoicenumber != undefined) {
+
+      this.purchaseOrderListService.getwopodetails(this.invoicenumber).subscribe(res => {
+
+        console.log("res is here ", res);
+
+        // this.wopodata = res[0].data;
+
+        // if (res[0].message == "Success") {
+
+        //   console.log("res[0].data ==>", this.wopodata);
+
+        //   sessionStorage.removeItem("invwopodetails");
+
+        //   sessionStorage.setItem("invwopodetails", JSON.stringify(this.wopodata));
+
+        // }
+
+        // this.router.navigate(["invoicesubmission"]
+console.log("mpo "+mpo);
+        if(mpo != null)
+
+        {
+
+          this.router.navigate(["invoicesimpo"]
+
+          , {
+
+            queryParams: {
+
+              type: btoa(type),
+
+              vd: btoa(vendorid),
+
+              invNo: btoa(invNo),
+
+              poNo: btoa(poNo),
+
+              mpo: btoa(mpo),
+
+            invoiceDate: btoa (invoiceDate)
+
+            }
+
+          })
+
+        }
+
+        else
+
+        {
+
+          this.router.navigate(["invoicesubmission"]
+
+          , {
+
+            queryParams: {
+
+              type: btoa(type),
+
+              vd: btoa(vendorid),
+
+              invNo: btoa(invNo),
+
+              poNo: btoa(poNo),
+
+              invoiceDate: btoa (invoiceDate)
+
+            }
+
+          })
+
+        }
+
+     
+
+      });
 
 
 
     }
 
+    else {
 
+      // this.router.navigate(["invoicesubmission"]
 
+      this.router.navigate(["invoicesubmission"]
+
+        , {
+
+          queryParams: {
+
+            type: btoa(type),
+
+            vd: btoa(vendorid),
+
+            invNo: btoa(invNo),
+
+            poNo: btoa(poNo),
+
+            invoiceDate: btoa (invoiceDate)
+
+          }
+        })
+    }
   }
-
-  reopenInvoice(invNo, poNo, vendorid, type,mpo,planttype,invoiceDate) {
-    console.log(type);
-    
-        if (this.invoicenumber != undefined) {
-    
-          this.purchaseOrderListService.getwopodetails(this.invoicenumber).subscribe(res => {
-    
-            console.log("res is here ", res);
-    
-            // this.wopodata = res[0].data;
-    
-            // if (res[0].message == "Success") {
-    
-            //   console.log("res[0].data ==>", this.wopodata);
-    
-            //   sessionStorage.removeItem("invwopodetails");
-    
-            //   sessionStorage.setItem("invwopodetails", JSON.stringify(this.wopodata));
-    
-            // }
-    
-            // this.router.navigate(["invoicesubmission"]
-    console.log("mpo "+mpo);
-            if(mpo != null)
-    
-            {
-    
-              this.router.navigate(["invoicesimpo"]
-    
-              , {
-    
-                queryParams: {
-    
-                  type: btoa(type),
-    
-                  vd: btoa(vendorid),
-    
-                  invNo: btoa(invNo),
-    
-                  poNo: btoa(poNo),
-    
-                  mpo: btoa(mpo),
-    
-                  planttype: btoa(planttype),
-    
-                  invoiceDate: btoa(invoiceDate)
-    
-                }
-    
-              })
-    
-            }
-    
-            else
-    
-            {
-    
-              this.router.navigate(["invoicesubmission"]
-    
-              , {
-    
-                queryParams: {
-    
-                  type: btoa(type),
-    
-                  vd: btoa(vendorid),
-    
-                  invNo: btoa(invNo),
-    
-                  poNo: btoa(poNo),
-                  invoiceDate: btoa(invoiceDate)
-    
-                }
-    
-              })
-    
-            }
-    
-         
-    
-          });
-    
-    
-    
-        }
-    
-        else {
-    
-          // this.router.navigate(["invoicesubmission"]
-    
-          this.router.navigate(["invoicesubmission"]
-    
-            , {
-    
-              queryParams: {
-    
-                type: btoa(type),
-    
-                vd: btoa(vendorid),
-    
-                invNo: btoa(invNo),
-    
-                poNo: btoa(poNo),
-                invoiceDate: btoa(invoiceDate)
-    
-              }
-    
-            })
-    
-    
-    
-        }
-    
-    
-    
-      }
     
 
   getPlantData(e) {

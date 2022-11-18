@@ -668,7 +668,8 @@
     <div class="commentDiv ">
         <div class="commentIcon " style="cursor: pointer; "
             *ngIf="invData.STATUS =='RO'"
-            (click)="reopenInvoice(invData.INVOICENUMBER,invData.PO_NUMBER,invData.VENDORID,'reopen',invData.ALLPO,invData.PLANT,invData.invoiceDate)">
+            (click)="reopenInvoice(invData.INVOICENUMBER,invData.PO_NUMBER,invData.VENDORID,'reopen',invData.ALLPO,invData.PLANT,invData.INVOICEDATE,invData.ACTUALFILENAME)">
+
             <img src="./assets/img/reopen.webp "
                 style="max-width: 38px; cursor: pointer; margin-left: 5px;" />
         </div>

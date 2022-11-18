@@ -1084,7 +1084,7 @@
 
                                             </div>
                                         </div>
-                                        <div class="inv-form-inputs mb-mt">
+                                        <div class="inv-form-inputs mb-mt" *ngIf="TypeNo != 'reopen'">
                                             <div class="invInputWicon">
                                                 <mat-label>Remarks</mat-label>
                                                 <sup class="imp">*</sup>
@@ -1100,7 +1100,27 @@
                                             placement="left" showDelay="300"></span> -->
                                             </div>
                                             <!-- <mat-error *ngIf="hasError('invoiceNo', 'required') && invoiceForm.controls['invoiceNo'].touched">*Name is required
-                                    </mat-error> -->
+                                            </mat-error> -->
+                                        </div>
+
+
+                                        <div class="inv-form-inputs mb-mt"  *ngIf="TypeNo =='reopen'">
+                                            <div class="invInputWicon">
+                                                <mat-label>Remarks</mat-label>
+                                                <sup class="imp">*</sup>
+                                                
+                                                <mat-form-field appearance="none">
+                                                    <mat-label>Remarks</mat-label>
+                                                    <!-- <input matInput placeholder="Enter Invoice Number" type="text" formControlName="invoiceNo" value=""> -->
+                                                    <textarea matInput placeholder="Enter Remark" readonly
+                                                        formControlName="remarks" maxlength="160" value="" (input)="checklength('remark')"></textarea>
+                                                </mat-form-field>
+                                                <mat-label style="font-size: 10px;">{{remarklength}} characters out of 160</mat-label>
+                                                <!-- <span class="fa fa-info-circle inputInfoIcon" tooltip-class="" tooltip="Description"
+                                            placement="left" showDelay="300"></span> -->
+                                            </div>
+                                            <!-- <mat-error *ngIf="hasError('invoiceNo', 'required') && invoiceForm.controls['invoiceNo'].touched">*Name is required
+                                            </mat-error> -->
                                         </div>
                                     </div>
 

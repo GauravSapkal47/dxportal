@@ -193,6 +193,7 @@ export class InvoiceSubmissionComponent implements OnInit {
       if (this.TypeNo == "reopen") {
         this.invNo = atob(params.invNo);
         this.ponumber = atob(params.poNo);
+        this.invoicedata = atob(params.invoicedata)
       }
 
       $("body").on("click", ".inv-wrapper", function () {
@@ -231,7 +232,7 @@ export class InvoiceSubmissionComponent implements OnInit {
       $('.inv-wrapper.active').removeClass('active');
       $(this).addClass('active');
     });
-    if (this.TypeNo != 'resubmit') {
+    if (this.TypeNo != 'resubmit' && this.TypeNo !="reopen") {
 
       // this.invoiceForm.get('resubmitattachments').setValidators(null);
       // this.invoiceForm.get('resubmitattachments').updateValueAndValidity();
@@ -373,6 +374,7 @@ export class InvoiceSubmissionComponent implements OnInit {
           this.part = true;
           this.full = false;
           this.resubmit = true;
+          
         }
         else {
           this.part = false;
@@ -383,7 +385,8 @@ export class InvoiceSubmissionComponent implements OnInit {
         this.getPOitems(this.ponumber)
       });
     }
-    else if (this.TypeNo == "resubmit") {
+    else if (this.TypeNo == "resubmit" || this.TypeNo =="reopen") {
+
       this.fileupload = "norefileupload";
       // this.invoiceForm.get('resubmitattachments').setValidators(Validators.required);
       // this.invoiceForm.get('resubmitattachments').updateValueAndValidity();
@@ -392,6 +395,7 @@ export class InvoiceSubmissionComponent implements OnInit {
       this.part = true;
       this.full = false;
       this.resubmit = true;
+      this.reopen = true;
       // this.getPOitems(this.ponumber);
       this.invoicedata = [];
       // if(this.getPOitems(this.ponumber)){
@@ -1985,61 +1989,61 @@ export class InvoiceSubmissionComponent implements OnInit {
         this.delivery.quantity = "";
         this.delivery.uOM = "";
         this.delivery.contactPerson = sessionStorage.getItem("Requisitioner");
-        this.delivery.contactPersonPhone = "34343";
+        this.delivery.contactPersonPhone = "";
         this.delivery.invoiceNumber = this.invoiceForm.controls["invoiceNo"].value.trim();
         this.delivery.vendorID = "";
         this.delivery.company = "";
-        this.delivery.plant = "43434";
-        this.delivery.department = "35667";
-        this.delivery.costCentre = "6656";
-        this.delivery.category = "65656";
-        this.delivery.businessPartnerText = "656456";
-        this.delivery.profileID = "56456";
-        this.delivery.invoiceDocumentPath = "456456";
-        this.delivery.iGSTAmount = "2342";
-        this.delivery.cGSTAmount = "3445";
-        this.delivery.sgstAmount = "534543";
+        this.delivery.plant = "";
+        this.delivery.department = "";
+        this.delivery.costCentre = "";
+        this.delivery.category = "";
+        this.delivery.businessPartnerText = "";
+        this.delivery.profileID = "";
+        this.delivery.invoiceDocumentPath = "";
+        this.delivery.iGSTAmount = "";
+        this.delivery.cGSTAmount = "";
+        this.delivery.sgstAmount = "";
         this.delivery.totalAmount = this.invoiceForm.controls["TotalinctaxAmount"].value.toString().replace(/,/g, "");
-        this.delivery.description = "345345";
-        this.delivery.status = "54545";
-        this.delivery.invoiceamount = "345345";
-        this.delivery.actualfilename = "5435435";
-        this.delivery.savedfilename = "53535";
-        this.delivery.createdby = "35435";
-        this.delivery.managerid = "435345";
-        this.delivery.buyerid = "867867";
-        this.delivery.stage = "867856";
-        this.delivery.balance_qty = "645664";
-        this.delivery.rawinvno = "546457";
-        this.delivery.modified_by = "74747";
-        this.delivery.material = "777";
-        this.delivery.rateperquantity = "765765";
-        this.delivery.multipleactualfilename = "67657";
-        this.delivery.multiplesavedfilename = "667";
-        this.delivery.billofladingdate = "67567";
+        this.delivery.description = "";
+        this.delivery.status = "";
+        this.delivery.invoiceamount = "";
+        this.delivery.actualfilename =  this.actualresubmitfilename;
+        this.delivery.savedfilename = this.savedresubmitfilename;
+        this.delivery.createdby = "";
+        this.delivery.managerid = "";
+        this.delivery.buyerid = "";
+        this.delivery.stage = "";
+        this.delivery.balance_qty = "";
+        this.delivery.rawinvno = "";
+        this.delivery.modified_by = "";
+        this.delivery.material = "";
+        this.delivery.rateperquantity = "";
+        this.delivery.multipleactualfilename ="";
+        this.delivery.multiplesavedfilename = "";
+        this.delivery.billofladingdate = "";
         // this.delivery.ordervalue = "67567";
         this.delivery.invoiceDate = moment(
           new Date(
             this.invoiceForm.controls["invoiceDate"].value
           )
         ).format("DD/MM/YYYY");
-        this.delivery.remark = "67657";
-        this.delivery.totalamtinctaxes = "543534";
+        this.delivery.remark = "";
+        this.delivery.totalamtinctaxes = "";
         this.delivery.taxamount =
         this.invoiceForm.controls["taxAmount"].value
           .toString()
           .replace(/,/g, "");
-        this.delivery.storagelocation = "6767";
-        this.delivery.lineitemtext = "787585";
-        this.delivery.uniquereferencenumber = "757";
-        this.delivery.saplineitemnumber = "7567";
-        this.delivery.servicenumber = "567567";
-        this.delivery.beforesubmissioninvoicenumber = "65757";
-        this.delivery.srcnnumber = "7575";
-        this.delivery.dcnumber = "76765";
-        this.delivery.previnvno = this.invNo;
-        this.delivery.previnvdate = moment(new Date(this.invoiceForm.controls["invoiceDate"].value)).format("DD/MM/YYYY");
-        this.delivery.prevponos = "645";
+        this.delivery.storagelocation = "";
+        this.delivery.lineitemtext = "";
+        this.delivery.uniquereferencenumber = "";
+        this.delivery.saplineitemnumber = "";
+        this.delivery.servicenumber = "";
+        this.delivery.beforesubmissioninvoicenumber = "";
+        this.delivery.srcnnumber = "";
+        this.delivery.dcnumber = "";
+        this.delivery.previnvno =   sessionStorage.getItem("previousinvno");
+        this.delivery.previnvdate = "18/11/2022";
+        this.delivery.prevponos =sessionStorage.getItem("prevponos");
         this.delivery.type = "reopen";
         this.delivery.invoicetype = "invoice";
         this.invoicesubmissionarray.push(this.delivery);
@@ -2048,9 +2052,39 @@ export class InvoiceSubmissionComponent implements OnInit {
           .subscribe((res) => {
             sessionStorage.removeItem("invwopodetails");
             if (res[0].message == "Success") {
-              alert();
-                 this.loaderservice.hide();
-            } else {
+              this.loaderservice.hide();
+                                    // this.dialogBox.popUpOpen2('Invoice has been submitted successfully', 'success', 'invoicesubmit');
+                                    const dialogConfig = new MatDialogConfig();
+                                    dialogConfig.data = {
+                                      message:
+                                        "Invoice has been submitted successfully",
+                                      condition: "success",
+                                      page: "invoicesubmit",
+                                    };
+                                    const mydata = dialogConfig.data;
+                                    console.log("PopupComponent", mydata);
+
+                                    const dialogRef = this.dialog.open(
+                                      PopupComponent,
+                                      {
+                                        panelClass: "custom-modalbox",
+
+                                        width: "400px",
+                                        data: { datakey: dialogConfig.data },
+                                      }
+                                    );
+                                    dialogRef
+                                      .afterClosed()
+                                      .subscribe((result) => {
+                                        console.log(
+                                          `Dialog result1: ${result}`
+                                        );
+                                        this.router.navigate([
+                                          "/trackInvoiceList",
+                                        ]);
+                                      });
+                                  }
+             else {
               // this.loaderservice.hide();
               // this.dialogBox.popUpOpen2('Invoice Number Already Exist.', 'error', 'invoicesubmit');
               const dialogConfig = new MatDialogConfig();
