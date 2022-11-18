@@ -1978,7 +1978,7 @@ export class InvoiceSubmissionComponent implements OnInit {
       if (this.TypeNo == "reopen") {
         this.delivery.bid = sessionStorage.getItem("Bid");
         this.delivery.po_num = this.ponumber;
-        this.delivery.irnNumber = this.invoiceForm.controls["irnNo"].value;
+        this.delivery.irnNumber = "INV18111603" //this.invoiceForm.controls["irnNo"].value;
         this.delivery.irnDate = moment(
           new Date(this.invoiceForm.controls["irnDate"].value)
         ).format("DD/MM/YYYY");
